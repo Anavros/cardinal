@@ -2,6 +2,7 @@
 
 attribute vec2 a_position;
 attribute vec2 a_texcoord;
+uniform vec4 u_color;
 //varying vec3 v_color; //goes into fragment shader
 
 void main(void) {
