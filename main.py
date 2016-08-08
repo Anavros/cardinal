@@ -12,7 +12,16 @@ def main():
     program['position'] = np.c_[
         np.linspace(-1.0, +1.0, 1000),
         np.random.uniform(-0.5, +0.5, 1000)
-    ]
+    ].astype(np.float32)
+
+    @canvas.connect
+    def on_resize(event):
+        gloo.set_viewport(0, 0, *event.size)
+
+    @canvas.connect
+    def on_draw(event):
+        gloo.clear((1,1,1,1))
+        program.draw('line_strip')
 
     canvas.show()
     app.run()
@@ -24,17 +33,6 @@ def build_program(v_path, f_path):
     with open(f_path, 'r') as f_file:
         f_string = f_file.read()
     return gloo.Program(v_string, f_string)
-
-
-@canvas.connect
-def on_resize(event):
-    gloo.set_viewport(0, 0, *event.size)
-
-
-@canvas.connect
-def on_draw(event):
-    gloo.clear((1,1,1,1))
-    program.draw('line_strip')
 
 
 if __name__ == '__main__':
