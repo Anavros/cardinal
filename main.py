@@ -9,10 +9,12 @@ def main():
     canvas = app.Canvas(keys="interactive")
     program = build_program('vertex.glsl', 'fragment.glsl')
 
-    program['position'] = np.c_[
+    program['a_position'] = np.c_[
         np.linspace(-1.0, +1.0, 1000),
         np.random.uniform(-0.5, +0.5, 1000)
     ].astype(np.float32)
+
+    program['a_color'] = (0, 0, 1, 1) 
 
     @canvas.connect
     def on_resize(event):
@@ -32,6 +34,10 @@ def build_program(v_path, f_path):
         v_string = v_file.read()
     with open(f_path, 'r') as f_file:
         f_string = f_file.read()
+
+    #print(v_string, f_string)
+    #input()
+
     return gloo.Program(v_string, f_string)
 
 
