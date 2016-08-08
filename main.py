@@ -2,19 +2,32 @@
 
 
 import numpy as np
-from vispy import app, gloo
+from vispy import app, gloo, io
 
 
 def main():
-    canvas = app.Canvas(keys="interactive")
+    canvas = app.Canvas(size=(512, 512), keys="interactive")
     program = build_program('vertex.glsl', 'fragment.glsl')
+    texture = gloo.Texture2D(io.imread('image.png'), interpolation='nearest')
 
-    program['a_position'] = np.c_[
-        np.linspace(-1.0, +1.0, 1000),
-        np.random.uniform(-0.5, +0.5, 1000)
-    ].astype(np.float32)
+    program['a_position'] = [
+        (-1.0, -1.0), (-1.0, +1.0),
+        (+1.0, -1.0), (+1.0, +1.0)
+    ]
 
-    program['a_color'] = (0, 0, 1, 1) 
+
+    vertex_data = np.zeros(4, dtype=[('a_position', np.float32, 3),
+                                     ('a_texcoord', np.float32, 2)])
+    vertex_data['a_position'] = np.array([[-1.0, -1.0, 0.0], [+1.0, -1.0, 0.0],
+                                          [-1.0, +1.0, 0.0], [+1.0, +1.0, 0.0, ]])
+    vertex_data['a_texcoord'] = np.array([[0.0, 0.0], [0.0, 1.0],
+                                          [1.0, 0.0], [1.0, 1.0]])
+
+    vbo = gloo.VertexBuffer(vertex_data)
+    program['texture1'] = texture
+    program.bind(vbo)
+    # same as:
+    # program['a_position'] = ...
 
     @canvas.connect
     def on_resize(event):
@@ -23,10 +36,11 @@ def main():
     @canvas.connect
     def on_draw(event):
         gloo.clear((1,1,1,1))
-        program.draw('line_strip')
+        program.draw('triangle_strip')
 
     canvas.show()
     app.run()
+
 
 def build_program(v_path, f_path):
     # redundant but simple and easy to read
