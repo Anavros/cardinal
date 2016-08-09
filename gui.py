@@ -1,4 +1,6 @@
 
+import numpy as np
+
 
 def on_click(event):
     # when clicked, detect where the click occurred and reference against a table
@@ -24,12 +26,29 @@ def fit(anchor, x, y):
         slip = (1-x, 0)
     else:
         raise ValueError
-    
+
     return scale, slip
 
+
+def split_nine(image, cut_depth):
+    # 
+    #texture = io.imread('nine.png')
+    pass
+
+
+def stretch_nine(pieces, x, y):
+    return np.array([np.array([np.arange(256)]*256)]*4)
+
+
+#bird_selector_bar = {}
+
 r"""
-Example:
-div bird_display top 90%
-div color_select left 10%
-div shape_select bottom 20%
+There are two kinds of gui graphics: things that stretch and things that don't.
+Some graphics need to be pixel-perfect to be sharp. So we have to have some sort of
+feature that allows very specific pixel dimensions, and not just percentages of the
+screen.
+
+...Maybe we shouldn't even worry about this stuff yet. We could just make the screen
+a static size and forget about it all until later. It's really kind of an advanced
+feature. It's not that important.
 """

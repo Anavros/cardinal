@@ -3,14 +3,26 @@
 
 import numpy as np
 from vispy import app, gloo, io
-from vispy.util.transforms import ortho
 
 import gui
 
 def main():
-    canvas = app.Canvas(size=(512, 512), keys="interactive")
+    canvas = app.Canvas(
+        title="Birdies",
+        size=(800, 600),
+        keys="interactive",
+        resizable=False
+    )
     program = build_program('vertex.glsl', 'fragment.glsl')
-    texture = gloo.Texture2D(io.imread('image.png'), interpolation='linear')
+
+#    fit_test = [
+#        ('top', 1, 0.8, (0.5, 0.2, 0.8, 1)),
+#        ('bottom', 1, 0.2, (0.8, 0.6, 0.2, 1)),
+#        ('left', 0.1, 1, (0.2, 0.3, 0.5, 1))
+#    ]
+
+    texture = gloo.Texture2D(
+        gui.stretch_nine('image.png', 800, 600), interpolation='nearest')
 
     program['texture1'] = texture
     # not supposed to be negative! 0 -> 1, not -1 -> 1
@@ -21,12 +33,6 @@ def main():
     # maybe we just use one vbo quad and redraw it over and over with different
     # textures in different locations...
 
-    #program['u_transform'] = ortho(0, 1, 0, 0.5, -1, 1)
-
-    @canvas.connect
-    def on_resize(event):
-        gloo.set_viewport(0, 0, *event.size)
-
     @canvas.connect
     def on_draw(event):
         gloo.clear((1,1,1,1))
@@ -34,13 +40,14 @@ def main():
             (-1.0, -1.0), (+1.0, -1.0), (-1.0, +1.0), (+1.0, +1.0)
         ]).astype(np.float32)
 
-        scale, slip = gui.fit('right', 0.2, 1.0)
-
-        program['u_scale'] = scale
-        program['u_slide'] = slip
-        program['u_color'] = (0.5, 0.2, 0.8, 1)
         program.draw('triangle_strip')
-        #draw_all_vbos(program, bars, colors)
+
+#        for (side, x, y, color) in fit_test:
+#            scale, slide = gui.fit(side, x, y)
+#            program['u_scale'] = scale
+#            program['u_slide'] = slide
+#            program['u_color'] = color
+#            program.draw('triangle_strip')
 
     canvas.show()
     app.run()
