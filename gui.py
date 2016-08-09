@@ -37,7 +37,7 @@ def split_nine(image, cut_depth):
 
 
 def stretch_nine(pieces, x, y):
-    return np.array([np.array([np.arange(256)]*256)]*4)
+    return np.
 
 
 #bird_selector_bar = {}
