@@ -1,5 +1,7 @@
 
+from vispy import io
 import numpy as np
+import splitnine
 
 
 def on_click(event):
@@ -30,15 +32,27 @@ def fit(anchor, x, y):
     return scale, slip
 
 
-def split_nine(image, cut_depth):
-    # 
-    #texture = io.imread('nine.png')
-    pass
+def build_texture(config_file, x, y):
+    # div menu bottom (1, 0.4) split("nine.png", 12)
+    texture = np.full((y, x, 4), 255, dtype=np.uint8)
+    #texture[:, :, 2] = 200
+    #texture[:, :, 3] = 255
 
-
-def stretch_nine(pieces, x, y):
-    return np.
-
+    menu_img = splitnine.stretch("nine.png", x, int((y*0.4)), 12)
+    io.imsave('menu.png', menu_img)
+    menu = io.imread('menu.png')
+    #menu = np.zeros((80, x, 4), dtype=np.float32)
+    #menu[:, :, 1] = 200
+    #menu[:, :, 3] = 255
+    (my, mx, mz) = menu.shape
+    print(mx, my)
+    (ty, tx, tz) = texture.shape
+    print(tx, ty)
+    texture[-my:, :, :mz] = menu
+    texture[:, :, 3] = 256
+    #io.imsave('test.png', texture)
+    #new_tex = io.imread('test.png')
+    return texture
 
 #bird_selector_bar = {}
 

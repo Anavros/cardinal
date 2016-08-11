@@ -33,6 +33,11 @@ def stretch(path, new_x, new_y, d):
     #io.imsave(new_path, new_image)
 
 
+def save(path, new_path, x, y, d):
+    image = stretch(path, x, y, d)
+    io.imsave(new_path, image)
+
+
 def _scale(image, y, x):
     v = np.repeat(np.repeat(image, x, axis=0), y, axis=1)
     #print(image.shape, x, y)
@@ -55,57 +60,57 @@ def _trim(image, ny, nx):
 
 
 if __name__ == '__main__':
-    #stretch('nine.png', 'nine_128.png', 200, 300, 12)
+    save('nine.png', 'nine_128.png', 200, 300, 12)
 
-    from vispy import gloo, app
-
-    (w, h) = (256, 256)
-    canvas = app.Canvas(title="Stretchy!", keys='interactive', size=(w, h))
-
-    v_shader = r"""
-    
-    attribute vec2 a_pos;
-    attribute vec2 a_tex;
-
-    void main(void) {
-        gl_Position = vec4(a_pos, 0.0, 1.0);
-        gl_TexCoord[0] = vec4(a_tex, 0.0, 0.0);
-    }
-    """
-
-    f_shader = r"""
-    
-    uniform sampler2D s_tex;
-
-    void main(void) {
-        gl_FragColor = texture2D(s_tex, gl_TexCoord[0].st);
-    }
-    """
-
-    program = gloo.Program(v_shader, f_shader)
-
-    program['a_pos'] = np.array([
-        (-1.0, -1.0), (+1.0, -1.0),
-        (-1.0, +1.0), (+1.0, +1.0)
-    ]).astype(np.float32)
-    program['a_tex'] = np.array([
-        (0, 0), (0, 1),
-        (1, 0), (1, 1)
-    ]).astype(np.float32)
-    program['s_tex'] = gloo.Texture2D(stretch('nine.png', w, h, 12))
-
-    @canvas.connect
-    def on_draw(event):
-        gloo.clear((1,1,1,1))
-        program.draw('triangle_strip')
-
-    @canvas.connect
-    def on_resize(event):
-        (nw, nh) = event.physical_size
-        program['s_tex'] = gloo.Texture2D(stretch('nine.png', nw, nh, 12))
-        gloo.set_viewport(0, 0, nw, nh)
-        #gloo.clear((1,1,1,1))
-        #program.draw('triangle_strip')
-
-    canvas.show()
-    app.run()
+#    from vispy import gloo, app
+#
+#    (w, h) = (256, 256)
+#    canvas = app.Canvas(title="Stretchy!", keys='interactive', size=(w, h))
+#
+#    v_shader = r"""
+#    
+#    attribute vec2 a_pos;
+#    attribute vec2 a_tex;
+#
+#    void main(void) {
+#        gl_Position = vec4(a_pos.x*4, a_pos.y*4, 0.0, 1.0);
+#        gl_TexCoord[0] = vec4(a_tex, 0.0, 0.0);
+#    }
+#    """
+#
+#    f_shader = r"""
+#    
+#    uniform sampler2D s_tex;
+#
+#    void main(void) {
+#        gl_FragColor = texture2D(s_tex, gl_TexCoord[0].st);
+#    }
+#    """
+#
+#    program = gloo.Program(v_shader, f_shader)
+#
+#    program['a_pos'] = np.array([
+#        (-1.0, -1.0), (+1.0, -1.0),
+#        (-1.0, +1.0), (+1.0, +1.0)
+#    ]).astype(np.float32)
+#    program['a_tex'] = np.array([
+#        (0, 0), (0, 1),
+#        (1, 0), (1, 1)
+#    ]).astype(np.float32)
+#    program['s_tex'] = gloo.Texture2D(stretch('nine.png', w, h, 12))
+#
+#    @canvas.connect
+#    def on_draw(event):
+#        gloo.clear((1,1,1,1))
+#        program.draw('triangle_strip')
+#
+#    @canvas.connect
+#    def on_resize(event):
+#        (nw, nh) = event.physical_size
+#        program['s_tex'] = gloo.Texture2D(stretch('nine.png', nw, nh, 12))
+#        gloo.set_viewport(0, 0, nw, nh)
+#        #gloo.clear((1,1,1,1))
+#        #program.draw('triangle_strip')
+#
+#    canvas.show()
+#    app.run()

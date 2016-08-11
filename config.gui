@@ -12,3 +12,5 @@ div bird_selector bottom 1.0 0.1
     but bird_tiny   "assets/bird_tiny_icon_512.png" $perfect
     pad $split
 div color_bar left 0.2 1.0
+
+div menu bottom split "nine.png"

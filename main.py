@@ -3,26 +3,24 @@
 
 import numpy as np
 from vispy import app, gloo, io
+from vispy.util import transforms
 
 import gui
 
 def main():
+    w = 300
+    h = 200
+    app.use_app('glfw')
     canvas = app.Canvas(
         title="Birdies",
-        size=(800, 600),
+        size=(w, h),
         keys="interactive",
         resizable=False
     )
     program = build_program('vertex.glsl', 'fragment.glsl')
 
-#    fit_test = [
-#        ('top', 1, 0.8, (0.5, 0.2, 0.8, 1)),
-#        ('bottom', 1, 0.2, (0.8, 0.6, 0.2, 1)),
-#        ('left', 0.1, 1, (0.2, 0.3, 0.5, 1))
-#    ]
-
-    texture = gloo.Texture2D(
-        gui.stretch_nine('image.png', 800, 600), interpolation='nearest')
+    texture = gloo.Texture2D(gui.build_texture('x', w, h))
+    #texture = gloo.Texture2D(io.imread('test.png'))
 
     program['texture1'] = texture
     # not supposed to be negative! 0 -> 1, not -1 -> 1
@@ -30,15 +28,17 @@ def main():
         (0, 0), (0, 1),
         (1, 0), (1, 1)
     ]).astype(np.float32)
+    program['a_position'] = np.array([
+        (-1.0, -1.0), (-1.0, +1.0), (+1.0, -1.0), (+1.0, +1.0)
+        #(-0.5, -0.5), (-0.5, +0.5), (+0.5, -0.5), (+0.5, +0.5)
+    ]).astype(np.float32)
     # maybe we just use one vbo quad and redraw it over and over with different
     # textures in different locations...
+    #program['u_ortho'] = transforms.ortho(-1, 1, -1, 1, -1, 1) # not necessary?
 
     @canvas.connect
     def on_draw(event):
         gloo.clear((1,1,1,1))
-        program['a_position'] = np.array([
-            (-1.0, -1.0), (+1.0, -1.0), (-1.0, +1.0), (+1.0, +1.0)
-        ]).astype(np.float32)
 
         program.draw('triangle_strip')
 
