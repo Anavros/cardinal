@@ -1,16 +1,2 @@
-
-div display top 1.0 0.9
-div bird_selector bottom 1.0 0.1
-    # needs eight buttons, each button with its own event and icon, all pixel-perfect
-    but bird_normal "assets/bird_normal_icon_512.png" $perfect
-    but bird_forest "assets/bird_forest_icon_512.png" $perfect
-    but bird_swamp  "assets/bird_swamp_icon_512.png" $perfect
-    but bird_tundra "assets/bird_tundra_icon_512.png" $perfect
-    but bird_jungle "assets/bird_jungle_icon_512.png" $perfect
-    but bird_rocky  "assets/bird_rocky_icon_512.png" $perfect
-    but bird_plains "assets/bird_plains_icon_512.png" $perfect
-    but bird_tiny   "assets/bird_tiny_icon_512.png" $perfect
-    pad $split
-div color_bar left 0.2 1.0
-
-div menu bottom split "nine.png"
+id=menu anchor=bottom size=0.4 texture="nine.png" method=split depth=12
+id=left_bar anchor=left size=0.2 texture="nine.png" method=split depth=12

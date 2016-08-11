@@ -35,23 +35,51 @@ def fit(anchor, x, y):
 def build_texture(config_file, x, y):
     # div menu bottom (1, 0.4) split("nine.png", 12)
     texture = np.full((y, x, 4), 255, dtype=np.uint8)
-    #texture[:, :, 2] = 200
-    #texture[:, :, 3] = 255
+    keywords = ['div', 'id', 'anchor', 'size', 'texture', 'method', 'depth']
 
-    menu_img = splitnine.stretch("nine.png", x, int((y*0.4)), 12)
-    io.imsave('menu.png', menu_img)
-    menu = io.imread('menu.png')
-    #menu = np.zeros((80, x, 4), dtype=np.float32)
-    #menu[:, :, 1] = 200
-    #menu[:, :, 3] = 255
-    (my, mx, mz) = menu.shape
-    print(mx, my)
-    (ty, tx, tz) = texture.shape
-    print(tx, ty)
-    texture[-my:, :, :mz] = menu
-    texture[:, :, 3] = 256
-    #io.imsave('test.png', texture)
-    #new_tex = io.imread('test.png')
+    divs = []
+    with open(config_file, 'r') as f:
+        for line in f:
+            if not line.split('#')[0].strip():
+                continue
+
+            entry = {}
+            for word in line.split():
+                k, v = word.split('=')
+                print(k, ':', v)
+                if k not in keywords:
+                    print("Found unknown token {}.".format(k))
+                    continue
+                entry[k] = v
+            divs.append(entry)
+
+    for div in divs:
+        anchor = div["anchor"]
+        if anchor in ["bottom", "top"]:
+            ex = x
+            ey = int(y*float(div["size"]))
+        elif anchor in ["left", "right"]:
+            ex = int(x*float(div["size"]))
+            ey = y
+        else:
+            raise ValueError("Bad anchor!")
+
+        tex = splitnine.stretch(div["texture"].strip('"'), ex, ey, int(div["depth"]))
+        print(tex.shape)
+        (mx, my, mz) = tex.shape
+
+        if anchor == "bottom":
+            texture[-mx:, :, :mz] = tex
+        elif anchor == "top":
+            texture[:mx, :, :mz] = tex
+        elif anchor == "left":
+            texture[:, -my:, :mz] = tex
+        elif anchor == "right":
+            texture[:, :my, :mz] = tex
+        else:
+            raise ValueError("Bad anchor!")
+
+    texture = np.rot90(texture, k=2) # XXX cause I can't figure why it's upside down
     return texture
 
 #bird_selector_bar = {}

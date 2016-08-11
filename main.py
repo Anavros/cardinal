@@ -8,8 +8,8 @@ from vispy.util import transforms
 import gui
 
 def main():
-    w = 300
-    h = 200
+    w = 800
+    h = 600
     app.use_app('glfw')
     canvas = app.Canvas(
         title="Birdies",
@@ -19,7 +19,7 @@ def main():
     )
     program = build_program('vertex.glsl', 'fragment.glsl')
 
-    texture = gloo.Texture2D(gui.build_texture('x', w, h))
+    texture = gloo.Texture2D(gui.build_texture('config.gui', w, h))
     #texture = gloo.Texture2D(io.imread('test.png'))
 
     program['texture1'] = texture
@@ -39,7 +39,6 @@ def main():
     @canvas.connect
     def on_draw(event):
         gloo.clear((1,1,1,1))
-
         program.draw('triangle_strip')
 
 #        for (side, x, y, color) in fit_test:
