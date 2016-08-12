@@ -1,2 +1,7 @@
-id=menu anchor=bottom size=0.4 texture="nine.png" method=split depth=12
-id=left_bar anchor=left size=0.2 texture="nine.png" method=split depth=12
+
+# declare syntax within the config file
+? div handle anchor:str(top|bottom|left|right) texture size:float
+
+div menu        bottom  nine.png 0.4
+div left_bar    left    nine.png 0.2
+div top_bar     top     nine.png 0.1

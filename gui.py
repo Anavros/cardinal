@@ -2,6 +2,7 @@
 from vispy import io
 import numpy as np
 import splitnine
+import single as malt
 
 
 def on_click(event):
@@ -34,37 +35,22 @@ def fit(anchor, x, y):
 
 def build_texture(config_file, x, y):
     # div menu bottom (1, 0.4) split("nine.png", 12)
+    elements = malt.harvest(config_file)
+    malt.serve(elements)
     texture = np.full((y, x, 4), 255, dtype=np.uint8)
-    keywords = ['div', 'id', 'anchor', 'size', 'texture', 'method', 'depth']
 
-    divs = []
-    with open(config_file, 'r') as f:
-        for line in f:
-            if not line.split('#')[0].strip():
-                continue
-
-            entry = {}
-            for word in line.split():
-                k, v = word.split('=')
-                print(k, ':', v)
-                if k not in keywords:
-                    print("Found unknown token {}.".format(k))
-                    continue
-                entry[k] = v
-            divs.append(entry)
-
-    for div in divs:
-        anchor = div["anchor"]
+    for style, e in elements:
+        anchor = e["anchor"]
         if anchor in ["bottom", "top"]:
             ex = x
-            ey = int(y*float(div["size"]))
+            ey = int(y*float(e["size"]))
         elif anchor in ["left", "right"]:
-            ex = int(x*float(div["size"]))
+            ex = int(x*float(e["size"]))
             ey = y
         else:
             raise ValueError("Bad anchor!")
 
-        tex = splitnine.stretch(div["texture"].strip('"'), ex, ey, int(div["depth"]))
+        tex = splitnine.stretch(e["texture"].strip('"'), ex, ey, 12) # TODO
         print(tex.shape)
         (mx, my, mz) = tex.shape
 
