@@ -36,6 +36,8 @@ def main():
     # textures in different locations...
     #program['u_ortho'] = transforms.ortho(-1, 1, -1, 1, -1, 1) # not necessary?
 
+    canvas.connect(gui.on_mouse_press)
+
     @canvas.connect
     def on_draw(event):
         gloo.clear((1,1,1,1))

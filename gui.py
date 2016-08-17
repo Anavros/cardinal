@@ -5,13 +5,34 @@ import splitnine
 import malt
 
 
-def on_click(event):
+def on_mouse_press(event):
     # when clicked, detect where the click occurred and reference against a table
     # of elements. if the click matches an element, signal that element.
     # so we'll need a table of elements and their locations.
     # if we have a table, we could use that for rendering too.
     # plus then you could edit it externally in a text file or something.
-    pass
+    # might need to be an ordered structure
+    print('click')
+    gui_table = {
+        "menu": (0, 0, 230, 230),
+        "other": (200, 300, 100, 200)
+    }
+
+    if event.type == 'mouse_press':
+        (x, y) = event.pos
+        pos_to_div(x, y, gui_table)
+
+
+def pos_to_div(ex, ey, gui_table):
+    for handle, corners in gui_table.items():
+        (x, y, w, h) = corners
+        if x < ex < w+x and y < ey < h+y:
+            print("you clicked on {}!".format(handle))
+
+
+class Element(object):
+    def __init__(self, handle, corners, texture):
+        pass
 
 
 def fit(anchor, x, y):
@@ -34,10 +55,7 @@ def fit(anchor, x, y):
 
 
 def build_texture(config_file, x, y):
-
     elements = malt.load(config_file)
-
-
     texture = np.full((y, x, 4), 255, dtype=np.uint8)
     for style, e in elements:
         anchor = e["anchor"]
