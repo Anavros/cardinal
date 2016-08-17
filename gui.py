@@ -2,7 +2,7 @@
 from vispy import io
 import numpy as np
 import splitnine
-import single as malt
+import malt
 
 
 def on_click(event):
@@ -34,11 +34,11 @@ def fit(anchor, x, y):
 
 
 def build_texture(config_file, x, y):
-    # div menu bottom (1, 0.4) split("nine.png", 12)
-    elements = malt.harvest(config_file)
-    malt.serve(elements)
-    texture = np.full((y, x, 4), 255, dtype=np.uint8)
 
+    elements = malt.load(config_file)
+
+
+    texture = np.full((y, x, 4), 255, dtype=np.uint8)
     for style, e in elements:
         anchor = e["anchor"]
         if anchor in ["bottom", "top"]:
@@ -51,7 +51,6 @@ def build_texture(config_file, x, y):
             raise ValueError("Bad anchor!")
 
         tex = splitnine.stretch(e["texture"].strip('"'), ex, ey, 12) # TODO
-        print(tex.shape)
         (mx, my, mz) = tex.shape
 
         if anchor == "bottom":

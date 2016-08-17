@@ -1,4 +1,4 @@
 
 GUI Toolkit:
-- Figure out how to render everything into one texture.
-- Use orthographic projection to render the texture pixel-perfect.
+- Prevent panels from overlapping.
+- Implement click detection for each panel.

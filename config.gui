@@ -1,6 +1,6 @@
 
 # declare syntax within the config file
-? div handle anchor:str(top|bottom|left|right) texture size:float
+? div handle anchor[top|bottom|left|right] texture float(size)
 
 div menu        bottom  nine.png 0.4
 div left_bar    left    nine.png 0.2
