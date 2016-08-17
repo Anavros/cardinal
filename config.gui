@@ -3,7 +3,8 @@
 ? nest parent handle anchor[top|bottom|left|right] texture int(cut) float(size)
 
 nest canvas colors          left    nine.png    12  0.1
-nest canvas menu            bottom  nine.png    12  0.4
-    nest menu   menu_button     left    button.png  2   0.5
-    nest menu   other_button    right   button.png  2   0.3
+nest canvas menu            bottom  nine.png    12  0.4589
+ nest menu   but1            left    button.png  2   0.5
+ nest menu   but2            right   button.png  2   0.3
+ nest but2   deep            top     nine.png    12  0.2 # buggy
 nest canvas other_bar       left    nine.png    12  0.2

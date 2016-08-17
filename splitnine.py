@@ -49,6 +49,7 @@ def _trim(image, ny, nx):
     # inefficient! as if that matters at this point
     new_image = np.delete(image, [(x/2)+cx for cx in range(dx)], axis=0)
     new_image = np.delete(new_image, [(y/2)+cy for cy in range(dy)], axis=1)
+    assert new_image.shape[0] == nx and new_image.shape[1] == ny
     return new_image
 
 

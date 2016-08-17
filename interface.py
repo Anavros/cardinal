@@ -49,10 +49,15 @@ def build_gui(config_file, width, height):
         dimensions, parent.padding = _fit_element(
             args.anchor, args.size, parent.dimensions, parent.padding)
 
+        #parent.padding.x += 10
+        #parent.padding.y += 10
+        #parent.padding.h += 10
+        #parent.padding.w += 10
+
         dimensions.x += parent.dimensions.x
         dimensions.y += parent.dimensions.y
 
-        print(parent.handle, args.handle, parent.padding)
+        #print(parent.handle, args.handle, parent.padding)
 
         texture = splitnine.stretch(
             args.texture, dimensions.w, dimensions.h, args.cut)
@@ -78,23 +83,27 @@ def _fit_element(anchor, percent, parent, padding):
     ele = Quad()
     if anchor == 'top':
         ele.w = scr.w - buf.w - buf.x
+        #print("int({}) vs float({})".format(int(scr.h*percent), scr.h*percent))
         ele.h = int(scr.h*percent)
         ele.x = buf.x
         ele.y = buf.y
         buf.y = buf.y + ele.h
     elif anchor == 'bottom':
         ele.w = scr.w - buf.w - buf.x
+        #print("int({}) vs float({})".format(int(scr.h*percent), scr.h*percent))
         ele.h = int(scr.h*percent) - buf.h
         ele.x = buf.x
         ele.y = scr.h - ele.h
         buf.h = buf.h + ele.h
     elif anchor == 'left':
+        #print("int({}) vs float({})".format(int(scr.w*percent), scr.w*percent))
         ele.w = int(scr.w*percent)
         ele.h = scr.h - buf.h - buf.y
         ele.x = buf.x
         ele.y = buf.y
         buf.x = buf.x + ele.w
     elif anchor == 'right':
+        #print("int({}) vs float({})".format(int(scr.w*percent), scr.w*percent))
         ele.w = int(scr.w*percent) - buf.w
         ele.h = scr.h - buf.h - buf.y
         ele.x = scr.w - ele.w
@@ -126,7 +135,13 @@ def xrender(elements, texture):
     for element in elements:
         # menu
         ed = element.dimensions
-        texture[ed.y:ed.h+ed.y, ed.x:ed.w+ed.x, :] = element.image
+        try:
+            texture[ed.y:ed.h+ed.y, ed.x:ed.w+ed.x, :] = element.image
+        except ValueError:
+            #malt.serve(element)
+            print("image is", element.image.shape)
+            print("and should be", element.dimensions)
+            raise
         if element.components:
             # button1, 2
             texture = xrender(element.components, texture)
