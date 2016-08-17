@@ -30,9 +30,20 @@ def pos_to_div(ex, ey, gui_table):
             print("you clicked on {}!".format(handle))
 
 
+class GUI(object):
+    def __init__(self, elements, rect):
+        self.elements = elements
+        self.texture = None
+        self.rect = rect
+        (self.x, self.y, self.w, self.h) = rect
+
+
 class Element(object):
     def __init__(self, handle, corners, texture):
-        pass
+        self.handle = handle
+        self.rect = rect
+        (self.x, self.y, self.w, self.h) = rect
+        self.texture = texture
 
 
 def fit(anchor, x, y):
@@ -54,34 +65,48 @@ def fit(anchor, x, y):
     return scale, slip
 
 
-def build_texture(config_file, x, y):
-    elements = malt.load(config_file)
-    texture = np.full((y, x, 4), 255, dtype=np.uint8)
-    for style, e in elements:
-        anchor = e["anchor"]
-        if anchor in ["bottom", "top"]:
-            ex = x
-            ey = int(y*float(e["size"]))
-        elif anchor in ["left", "right"]:
-            ex = int(x*float(e["size"]))
-            ey = y
-        else:
-            raise ValueError("Bad anchor!")
+def build_gui(config_file, screen_w, screen_h):
+    elements = []
+    for (command, args) in malt.load(config_file).items():
+        # assume every command is div right now
+        handle = args['id']
+        (ex, ey, ew, eh) = _corners(args['anchor'], args['size'], screen_w, screen_h)
+        tex_path = args['texture']
+        e_tex = splitnine.stretch(tex_path, ew, eh, 12) # TODO
+        elements.append(Element(handle, (ex, ey, ew, eh), e_tex))
+    return GUI(elements, (0, 0, screen_w, screen_h))
 
-        tex = splitnine.stretch(e["texture"].strip('"'), ex, ey, 12) # TODO
-        (mx, my, mz) = tex.shape
 
-        if anchor == "bottom":
-            texture[-mx:, :, :mz] = tex
-        elif anchor == "top":
-            texture[:mx, :, :mz] = tex
-        elif anchor == "left":
-            texture[:, -my:, :mz] = tex
-        elif anchor == "right":
-            texture[:, :my, :mz] = tex
-        else:
-            raise ValueError("Bad anchor!")
+def _corners(anchor, percent, screen_w, screen_h):
+    if anchor == 'top':
+        ew = screen_w
+        eh = int(screen_h*percent)
+        ex = 0
+        ey = 0
+    elif anchor == 'bottom':
+        ew = screen_w
+        eh = int(screen_h*percent)
+        ex = 0
+        ey = screen_h - eh
+    elif anchor == 'left':
+        ew = int(screen_w*percent)
+        eh = screen_h
+        ex = 0
+        ey = 0
+    elif anchor == 'right':
+        ew = int(screen_w*percent)
+        eh = screen_h
+        ex = screen_w - ew
+        ey = 0
+    else:
+        raise ValueError("Invalid anchor! This shouldn't happen!")
+    return (ex, ey, ew, eh)
 
+
+def render(gui):
+    texture = np.full((gui.y, gui.x, 4), 255, dtype=np.uint8)
+    for e in gui.elements:
+        texture[e.x:e.w, e.y:e.h, :] = e.texture
     texture = np.rot90(texture, k=2) # XXX cause I can't figure why it's upside down
     return texture
 
