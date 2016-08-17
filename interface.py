@@ -43,7 +43,7 @@ def locate(x, y, elements):
 
 def build_gui(config_file, width, height):
     blank = np.zeros((height, width, 4), dtype=np.uint8)
-    canvas = Element('canvas', blank, Quad(0, 0, width, height), Quad().add(10), Quad())
+    canvas = Element('canvas', blank, Quad(0, 0, width, height), Quad(10, 5, 10, 5), Quad())
     for args in malt.load(config_file):
         if args.cmd != 'nest': raise ValueError() # TEMP
 
@@ -72,32 +72,36 @@ def _find_parent(handle, elements):
 
 
 def _fit(child, parent, anchor, size):
+    print(parent.pad, '->', end=' ')
     if anchor == 'top':
         child.dim.w = parent.dim.w - parent.pad.w - parent.pad.x
         child.dim.h = int(parent.dim.h*size)
         child.dim.x = parent.dim.x + parent.pad.x
         child.dim.y = parent.dim.y + parent.pad.y
-        parent.pad.y = parent.pad.y + child.dim.h
+        parent.pad.y += child.dim.h
     elif anchor == 'bottom':
         child.dim.w = parent.dim.w - parent.pad.w - parent.pad.x
         child.dim.h = int(parent.dim.h*size) - parent.pad.h
         child.dim.x = parent.dim.x + parent.pad.x
-        child.dim.y = parent.dim.y + parent.dim.h - child.dim.h
-        parent.pad.h = parent.pad.h + child.dim.h
+        child.dim.y = parent.dim.y + parent.dim.h - child.dim.h - parent.pad.h
+
+        parent.pad.h += child.dim.h # negative
     elif anchor == 'left':
         child.dim.w = int(parent.dim.w*size)
         child.dim.h = parent.dim.h - parent.pad.h - parent.pad.y
         child.dim.x = parent.dim.x + parent.pad.x
         child.dim.y = parent.dim.y + parent.pad.y
-        parent.pad.x = parent.pad.x + child.dim.w
+        parent.pad.x += child.dim.w
     elif anchor == 'right':
         child.dim.w = int(parent.dim.w*size) - parent.pad.w
         child.dim.h = parent.dim.h - parent.pad.h - parent.pad.y
-        child.dim.x = parent.dim.x + parent.dim.w - child.dim.w
+        child.dim.x = parent.dim.x + parent.dim.w - child.dim.w - parent.pad.w
         child.dim.y = parent.dim.y + parent.pad.y
-        parent.pad.w = parent.pad.w + child.dim.w
+
+        parent.pad.w += child.dim.w
     else:
         raise ValueError("Invalid anchor! This shouldn't happen!")
+    print(parent.pad)
     return child, parent
 
 
