@@ -24,7 +24,7 @@ def main():
     blank = np.full((logical_h, logical_w, 4), 255, dtype=np.uint8)
 
     elements = interface.build_gui('config.gui', logical_w, logical_h)
-    texture = gloo.Texture2D(interface.xrender(elements, blank))
+    texture = gloo.Texture2D(np.flipud(interface.xrender(elements, blank)))
     #texture = gloo.Texture2D(io.imread('test.png'))
 
     program['texture1'] = texture
