@@ -6,90 +6,106 @@ import malt
 
 
 def locate_div(x, y, gui):
-    for e in gui.elements:
+    for element in gui.elements:
+        e = element.rect
         if e.x < x < e.w+e.x and e.y < y < e.h+e.y:
-            return e.handle
+            return element.handle
 
 
 class GUI(object):
-    def __init__(self, elements, rect):
+    def __init__(self, elements, scr, buf):
         self.elements = elements
-        self.texture = None
-        self.rect = rect
-        (self.x, self.y, self.w, self.h) = rect
-        self.buffers = (0, 0, 0, 0)
+        self.scr = scr
+        self.buf = buf
 
 
 class Element(object):
-    def __init__(self, handle, rect, buff, texture):
+    def __init__(self, handle, rect, texture):
         self.handle = handle
         self.rect = rect
-        self.buff = buff
-        (self.x, self.y, self.w, self.h) = rect
-        (self.xb, self.yb, self.wb, self.hb) = buff
         self.texture = texture
 
 
-# TODO: cleanup
+class Button(object):
+    pass
+
+
+class Quad(object):
+    def __init__(self, x=0, y=0, w=0, h=0):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+
+
 def build_gui(config_file, screen_w, screen_h):
     elements = []
-    (xb, yb, wb, hb) = (0, 0, 0, 0)
+    buf = Quad()
+    scr = Quad(0, 0, screen_w, screen_h)
     for (command, args) in malt.load(config_file):
-        # assume every command is div right now
-        handle = args['handle']
-        (ex, ey, ew, eh) = _corners(
-            args['anchor'], args['size'], screen_w, screen_h, (xb, yb, wb, hb))
-        tex_path = args['texture']
-        (tex_w, tex_h) = (ew, eh)
-        e_tex = splitnine.stretch(tex_path, tex_w, tex_h, 12) # TODO
-        elements.append(Element(handle, (ex, ey, ew, eh), (xb, yb, wb, hb), e_tex))
-        (xb, yb, wb, hb) = _buffers(args['anchor'], (ex,ey,ew,eh), (xb,yb,wb,hb))
-    return GUI(elements, (0, 0, screen_w, screen_h))
+        if command == 'div':
+            ele, buf = _build_div(args, scr, buf)
+            elements.append(ele)
+        elif command == 'button':
+            pass
+    return GUI(elements, scr, buf)
 
 
-def _buffers(anchor, corners, buffers):
-    (ex, ey, ew, eh) = corners
-    (xb, yb, wb, hb) = buffers
+def _build_div(args, scr, buf):
+
+    handle = args['handle']
+    anchor = args['anchor']
+    tex_path = args['texture']
+    size = args['size']
+
+    ele, buf = _fit_element(anchor, size, scr, buf)
+    texture = splitnine.stretch(tex_path, ele.w, ele.h, 12) # TODO
+
+    return Element(handle, ele, texture), buf
+
+
+def _build_button():
+    pass
+
+
+def _fit_element(anchor, percent, screen_quad, buffer_quad):
+    scr = screen_quad
+    buf = buffer_quad
+    ele = Quad()
+    #(xb, yb, wb, hb) = buffers
     if anchor == 'top':
-        return (xb, yb+eh, wb, hb)
+        ele.w = scr.w - buf.w - buf.x
+        ele.h = int(scr.h*percent)
+        ele.x = buf.x
+        ele.y = buf.y
+        buf.y = buf.y + ele.h
     elif anchor == 'bottom':
-        return (xb, yb, wb, hb+eh)
+        ele.w = scr.w - buf.w - buf.x
+        ele.h = int(scr.h*percent) - buf.h
+        ele.x = buf.x
+        ele.y = scr.h - ele.h
+        buf.h = buf.h + ele.h
     elif anchor == 'left':
-        return (xb+ew, yb, wb, hb)
+        ele.w = int(scr.w*percent)
+        ele.h = scr.h - buf.h - buf.y
+        ele.x = buf.x
+        ele.y = buf.y
+        buf.x = buf.x + ele.w
     elif anchor == 'right':
-        return (xb, yb, wb+ew, hb)
-
-
-def _corners(anchor, percent, screen_w, screen_h, buffers=(0, 0, 0, 0)):
-    (xb, yb, wb, hb) = buffers
-    if anchor == 'top':
-        ew = screen_w - wb - xb
-        eh = int(screen_h*percent)
-        ex = 0 + xb
-        ey = 0 + yb
-    elif anchor == 'bottom':
-        ew = screen_w - wb - xb
-        eh = int(screen_h*percent) - hb
-        ex = 0 + xb
-        ey = screen_h - eh
-    elif anchor == 'left':
-        ew = int(screen_w*percent)
-        eh = screen_h - hb - yb
-        ex = 0 + xb
-        ey = 0 + yb
-    elif anchor == 'right':
-        ew = int(screen_w*percent) - wb
-        eh = screen_h - hb - yb
-        ex = screen_w - ew
-        ey = 0 + yb
+        ele.w = int(scr.w*percent) - buf.w
+        ele.h = scr.h - buf.h - buf.y
+        ele.x = scr.w - ele.w
+        ele.y = buf.y
+        buf.w = buf.w + ele.w
     else:
         raise ValueError("Invalid anchor! This shouldn't happen!")
-    return (ex, ey, ew, eh)
+    return ele, buf
 
 
 def render(gui):
-    texture = np.full((gui.h, gui.w, 4), 255, dtype=np.uint8)
+    texture = np.full((gui.scr.h, gui.scr.w, 4), 255, dtype=np.uint8)
     for e in gui.elements:
-        texture[e.y:e.h+e.y, e.x:e.w+e.x, :] = e.texture
+        r = e.rect
+        texture[r.y:r.h+r.y, r.x:r.w+r.x, :] = e.texture
     texture = np.flipud(texture) # XXX cause I can't figure why it's upside down
     return texture
