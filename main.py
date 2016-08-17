@@ -21,9 +21,10 @@ def main():
         resizable=False
     )
     program = build_program('vertex.glsl', 'fragment.glsl')
+    blank = np.full((logical_h, logical_w, 4), 255, dtype=np.uint8)
 
-    gui = interface.build_gui('config.gui', logical_w, logical_h)
-    texture = gloo.Texture2D(interface.render(gui))
+    elements = interface.build_gui('config.gui', logical_w, logical_h)
+    texture = gloo.Texture2D(interface.xrender(elements, blank))
     #texture = gloo.Texture2D(io.imread('test.png'))
 
     program['texture1'] = texture
@@ -46,7 +47,7 @@ def main():
         (x, y) = event.pos
         (x, y) = (int(x/scale), int(y/scale))
         print("Click: ", end='')
-        handle = interface.locate_div(x, y, gui)
+        handle = interface.locate(x, y, elements)
         if handle:
             print("Element '{}' has been triggered!".format(handle))
         else:
