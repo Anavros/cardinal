@@ -6,11 +6,12 @@ import malt
 
 
 class Element(object):
-    def __init__(self, handle, image, dimensions, padding):
+    def __init__(self, handle, image, dim, pad, mar):
         self.handle = handle
         self.image = image
-        self.dimensions = dimensions
-        self.padding = padding
+        self.dim = dim
+        self.pad = pad
+        self.mar = mar
         self.components = []
 
 
@@ -22,6 +23,8 @@ class Quad(object):
         self.h = h
     def unpack(self):
         return (self.x, self.y, self.w, self.h)
+    def add(self, n):
+        return Quad(self.x+n, self.y+n, self.w+n, self.h+n)
     def __repr__(self):
         return "Quad({}, {}, {}, {})".format(self.x, self.y, self.w, self.h)
 
@@ -29,7 +32,7 @@ class Quad(object):
 def locate(x, y, elements):
     result = None
     for element in elements:
-        d = element.dimensions
+        d = element.dim
         if d.x < x < d.w+d.x and d.y < y < d.h+d.y:
             result = element.handle
             if element.components:
@@ -40,30 +43,21 @@ def locate(x, y, elements):
 
 def build_gui(config_file, width, height):
     blank = np.zeros((height, width, 4), dtype=np.uint8)
-    canvas = Element('canvas', blank, Quad(0, 0, width, height), Quad())
+    canvas = Element('canvas', blank, Quad(0, 0, width, height), Quad().add(10), Quad())
     for args in malt.load(config_file):
         if args.cmd != 'nest': raise ValueError() # TEMP
 
         parent = _find_parent(args.parent, [canvas])
-
-        dimensions, parent.padding = _fit_element(
-            args.anchor, args.size, parent.dimensions, parent.padding)
-
-        #parent.padding.x += 10
-        #parent.padding.y += 10
-        #parent.padding.h += 10
-        #parent.padding.w += 10
-
-        dimensions.x += parent.dimensions.x
-        dimensions.y += parent.dimensions.y
-
-        #print(parent.handle, args.handle, parent.padding)
-
-        texture = splitnine.stretch(
-            args.texture, dimensions.w, dimensions.h, args.cut)
-
-        parent.components.append(
-            Element(args.handle, texture, dimensions, Quad()))
+        child = Element(
+            args.handle,
+            image=None,
+            dim=Quad(),
+            pad=Quad().add(args.pad),
+            mar=Quad().add(args.mar)
+        )
+        child, parent = _fit(child, parent, args.anchor, args.size)
+        child.image = splitnine.stretch(args.texture, child.dim.w, child.dim.h, args.cut)
+        parent.components.append(child)
 
     return [canvas]
 
@@ -77,80 +71,48 @@ def _find_parent(handle, elements):
     raise IndexError("No parent container named {}.".format(handle))
 
 
-def _fit_element(anchor, percent, parent, padding):
-    scr = parent
-    buf = padding
-    ele = Quad()
+def _fit(child, parent, anchor, size):
     if anchor == 'top':
-        ele.w = scr.w - buf.w - buf.x
-        #print("int({}) vs float({})".format(int(scr.h*percent), scr.h*percent))
-        ele.h = int(scr.h*percent)
-        ele.x = buf.x
-        ele.y = buf.y
-        buf.y = buf.y + ele.h
+        child.dim.w = parent.dim.w - parent.pad.w - parent.pad.x
+        child.dim.h = int(parent.dim.h*size)
+        child.dim.x = parent.dim.x + parent.pad.x
+        child.dim.y = parent.dim.y + parent.pad.y
+        parent.pad.y = parent.pad.y + child.dim.h
     elif anchor == 'bottom':
-        ele.w = scr.w - buf.w - buf.x
-        #print("int({}) vs float({})".format(int(scr.h*percent), scr.h*percent))
-        ele.h = int(scr.h*percent) - buf.h
-        ele.x = buf.x
-        ele.y = scr.h - ele.h
-        buf.h = buf.h + ele.h
+        child.dim.w = parent.dim.w - parent.pad.w - parent.pad.x
+        child.dim.h = int(parent.dim.h*size) - parent.pad.h
+        child.dim.x = parent.dim.x + parent.pad.x
+        child.dim.y = parent.dim.y + parent.dim.h - child.dim.h
+        parent.pad.h = parent.pad.h + child.dim.h
     elif anchor == 'left':
-        #print("int({}) vs float({})".format(int(scr.w*percent), scr.w*percent))
-        ele.w = int(scr.w*percent)
-        ele.h = scr.h - buf.h - buf.y
-        ele.x = buf.x
-        ele.y = buf.y
-        buf.x = buf.x + ele.w
+        child.dim.w = int(parent.dim.w*size)
+        child.dim.h = parent.dim.h - parent.pad.h - parent.pad.y
+        child.dim.x = parent.dim.x + parent.pad.x
+        child.dim.y = parent.dim.y + parent.pad.y
+        parent.pad.x = parent.pad.x + child.dim.w
     elif anchor == 'right':
-        #print("int({}) vs float({})".format(int(scr.w*percent), scr.w*percent))
-        ele.w = int(scr.w*percent) - buf.w
-        ele.h = scr.h - buf.h - buf.y
-        ele.x = scr.w - ele.w
-        ele.y = buf.y
-        buf.w = buf.w + ele.w
+        child.dim.w = int(parent.dim.w*size) - parent.pad.w
+        child.dim.h = parent.dim.h - parent.pad.h - parent.pad.y
+        child.dim.x = parent.dim.x + parent.dim.w - child.dim.w
+        child.dim.y = parent.dim.y + parent.pad.y
+        parent.pad.w = parent.pad.w + child.dim.w
     else:
         raise ValueError("Invalid anchor! This shouldn't happen!")
-    return ele, buf
+    return child, parent
 
 
-def render(gui):
-    height = gui.canvas.dimensions.h
-    width = gui.canvas.dimensions.w
-    texture = np.full((height, width, 4), 255, dtype=np.uint8)
-    for element in gui.elements:
-        er = element.dimensions
-        texture[er.y:er.h+er.y, er.x:er.w+er.x, :] = element.image
-        for component in element.components:
-            cr = component.dimensions
-            cr.x += er.x
-            cr.y += er.y
-            texture[cr.y:cr.h+cr.y, cr.x:cr.w+cr.x, :] = component.image
-    texture = np.flipud(texture) # XXX cause I can't figure why it's upside down
-    return texture
-
-
-#texture = np.full((ed.h, ed.w, 4), 255, dtype=np.uint8)
 def xrender(elements, texture):
     for element in elements:
         # menu
-        ed = element.dimensions
+        ed = element.dim
         try:
             texture[ed.y:ed.h+ed.y, ed.x:ed.w+ed.x, :] = element.image
         except ValueError:
             #malt.serve(element)
             print("image is", element.image.shape)
-            print("and should be", element.dimensions)
+            print("and should be", element.dim)
             raise
         if element.components:
             # button1, 2
             texture = xrender(element.components, texture)
     return texture
-
-# draw order
-# canvas
-#   menu
-#     button1
-#     button2
-#   color_bar
-#   other_bar

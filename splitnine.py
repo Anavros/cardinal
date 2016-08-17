@@ -55,7 +55,7 @@ def _trim(image, ny, nx):
             break
         elif x < nx:
             assert False, "Too far!"
-        print("trimmed the x")
+        #print("trimmed the x")
     while True:
         image = np.delete(image, y/2, axis=1)
         y = image.shape[1]
@@ -63,66 +63,9 @@ def _trim(image, ny, nx):
             break
         elif y < ny:
             assert False, "Too far!"
-        print("trimmed the y")
+        #print("trimmed the y")
 
     if image.shape[0] != nx or image.shape[1] != ny:
         print(image.shape, nx, ny)
         raise ValueError("Rounding problem!")
     return image
-
-
-if __name__ == '__main__':
-    save('nine.png', 'nine_128.png', 200, 300, 12)
-
-#    from vispy import gloo, app
-#
-#    (w, h) = (256, 256)
-#    canvas = app.Canvas(title="Stretchy!", keys='interactive', size=(w, h))
-#
-#    v_shader = r"""
-#    
-#    attribute vec2 a_pos;
-#    attribute vec2 a_tex;
-#
-#    void main(void) {
-#        gl_Position = vec4(a_pos.x*4, a_pos.y*4, 0.0, 1.0);
-#        gl_TexCoord[0] = vec4(a_tex, 0.0, 0.0);
-#    }
-#    """
-#
-#    f_shader = r"""
-#    
-#    uniform sampler2D s_tex;
-#
-#    void main(void) {
-#        gl_FragColor = texture2D(s_tex, gl_TexCoord[0].st);
-#    }
-#    """
-#
-#    program = gloo.Program(v_shader, f_shader)
-#
-#    program['a_pos'] = np.array([
-#        (-1.0, -1.0), (+1.0, -1.0),
-#        (-1.0, +1.0), (+1.0, +1.0)
-#    ]).astype(np.float32)
-#    program['a_tex'] = np.array([
-#        (0, 0), (0, 1),
-#        (1, 0), (1, 1)
-#    ]).astype(np.float32)
-#    program['s_tex'] = gloo.Texture2D(stretch('nine.png', w, h, 12))
-#
-#    @canvas.connect
-#    def on_draw(event):
-#        gloo.clear((1,1,1,1))
-#        program.draw('triangle_strip')
-#
-#    @canvas.connect
-#    def on_resize(event):
-#        (nw, nh) = event.physical_size
-#        program['s_tex'] = gloo.Texture2D(stretch('nine.png', nw, nh, 12))
-#        gloo.set_viewport(0, 0, nw, nh)
-#        #gloo.clear((1,1,1,1))
-#        #program.draw('triangle_strip')
-#
-#    canvas.show()
-#    app.run()
