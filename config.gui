@@ -2,6 +2,7 @@
 # declare syntax within the config file
 ? div handle anchor[top|bottom|left|right] texture float(size)
 
-div menu        bottom  nine.png 0.4
-div left_bar    left    nine.png 0.2
+div right_bar   right   nine.png 0.3
 div top_bar     top     nine.png 0.1
+div left_bar    left    nine.png 0.2
+div menu        bottom  nine.png 0.4

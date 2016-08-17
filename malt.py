@@ -171,7 +171,7 @@ def _read_syntax_comments(filepath):
             raw_lines.append(line.strip('?').strip())
     if not raw_lines:
         raise ValueError()
-    serve(raw_lines)
+    #serve(raw_lines)
     return _compile(raw_lines)
 
 

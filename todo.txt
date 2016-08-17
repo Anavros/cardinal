@@ -1,4 +1,3 @@
 
 GUI Toolkit:
 - Prevent panels from overlapping.
-- Implement click detection for each panel.
