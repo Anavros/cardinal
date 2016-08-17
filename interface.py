@@ -5,29 +5,10 @@ import splitnine
 import malt
 
 
-def on_mouse_press(event):
-    # when clicked, detect where the click occurred and reference against a table
-    # of elements. if the click matches an element, signal that element.
-    # so we'll need a table of elements and their locations.
-    # if we have a table, we could use that for rendering too.
-    # plus then you could edit it externally in a text file or something.
-    # might need to be an ordered structure
-    print('click')
-    gui_table = {
-        "menu": (0, 0, 230, 230),
-        "other": (200, 300, 100, 200)
-    }
-
-    if event.type == 'mouse_press':
-        (x, y) = event.pos
-        pos_to_div(x, y, gui_table)
-
-
-def pos_to_div(ex, ey, gui_table):
-    for handle, corners in gui_table.items():
-        (x, y, w, h) = corners
-        if x < ex < w+x and y < ey < h+y:
-            print("you clicked on {}!".format(handle))
+def locate_div(x, y, gui):
+    for e in gui.elements:
+        if e.x < x < e.w+e.x and e.y < y < e.h+e.y:
+            print("Element '{}' has been triggered!".format(e.handle))
 
 
 class GUI(object):
@@ -39,37 +20,18 @@ class GUI(object):
 
 
 class Element(object):
-    def __init__(self, handle, corners, texture):
+    def __init__(self, handle, rect, texture):
         self.handle = handle
         self.rect = rect
         (self.x, self.y, self.w, self.h) = rect
         self.texture = texture
 
 
-def fit(anchor, x, y):
-    """Calculates stretch and slip to make a quad fill a certain amount of space."""
-
-    # fit(left, 1, 0.5): scale.x = 1, scale.y=0.5, slip.x=0, slip.y=0
-    scale = (x, y)
-    if anchor == 'top':
-        slip = (0, 1-y)
-    elif anchor == 'bottom':
-        slip = (0, -1+y)
-    elif anchor == 'left':
-        slip = (-1+x, 0)
-    elif anchor == 'right':
-        slip = (1-x, 0)
-    else:
-        raise ValueError
-
-    return scale, slip
-
-
 def build_gui(config_file, screen_w, screen_h):
     elements = []
-    for (command, args) in malt.load(config_file).items():
+    for (command, args) in malt.load(config_file):
         # assume every command is div right now
-        handle = args['id']
+        handle = args['handle']
         (ex, ey, ew, eh) = _corners(args['anchor'], args['size'], screen_w, screen_h)
         tex_path = args['texture']
         e_tex = splitnine.stretch(tex_path, ew, eh, 12) # TODO
@@ -104,10 +66,12 @@ def _corners(anchor, percent, screen_w, screen_h):
 
 
 def render(gui):
-    texture = np.full((gui.y, gui.x, 4), 255, dtype=np.uint8)
+    texture = np.full((gui.h, gui.w, 4), 255, dtype=np.uint8)
     for e in gui.elements:
-        texture[e.x:e.w, e.y:e.h, :] = e.texture
-    texture = np.rot90(texture, k=2) # XXX cause I can't figure why it's upside down
+        print(gui.x, gui.y, gui.w, gui.h)
+        print(e.x, e.y, e.w, e.h)
+        texture[e.y:e.h+e.y, e.x:e.w+e.x, :] = e.texture
+    texture = np.flipud(texture) # XXX cause I can't figure why it's upside down
     return texture
 
 #bird_selector_bar = {}

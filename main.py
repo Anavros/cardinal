@@ -5,7 +5,7 @@ import numpy as np
 from vispy import app, gloo, io
 from vispy.util import transforms
 
-import gui
+import interface
 
 def main():
     w = 800
@@ -19,7 +19,8 @@ def main():
     )
     program = build_program('vertex.glsl', 'fragment.glsl')
 
-    texture = gloo.Texture2D(gui.build_texture('config.gui', w, h))
+    gui = interface.build_gui('config.gui', w, h)
+    texture = gloo.Texture2D(interface.render(gui))
     #texture = gloo.Texture2D(io.imread('test.png'))
 
     program['texture1'] = texture
@@ -36,7 +37,11 @@ def main():
     # textures in different locations...
     #program['u_ortho'] = transforms.ortho(-1, 1, -1, 1, -1, 1) # not necessary?
 
-    canvas.connect(gui.on_mouse_press)
+    @canvas.connect
+    def on_mouse_press(event):
+        (x, y) = event.pos
+        print("Click: ", end='')
+        interface.locate_div(x, y, gui)
 
     @canvas.connect
     def on_draw(event):
