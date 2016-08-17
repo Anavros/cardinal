@@ -46,11 +46,29 @@ def _trim(image, ny, nx):
     (dx, dy) = (x-nx, y-ny)
     #print(dx, dy)
     assert dx > 0 and dy > 0
+
     # inefficient! as if that matters at this point
-    new_image = np.delete(image, [(x/2)+cx for cx in range(dx)], axis=0)
-    new_image = np.delete(new_image, [(y/2)+cy for cy in range(dy)], axis=1)
-    assert new_image.shape[0] == nx and new_image.shape[1] == ny
-    return new_image
+    while True:
+        image = np.delete(image, x/2, axis=0)
+        x = image.shape[0]
+        if x == nx:
+            break
+        elif x < nx:
+            assert False, "Too far!"
+        print("trimmed the x")
+    while True:
+        image = np.delete(image, y/2, axis=1)
+        y = image.shape[1]
+        if y == ny:
+            break
+        elif y < ny:
+            assert False, "Too far!"
+        print("trimmed the y")
+
+    if image.shape[0] != nx or image.shape[1] != ny:
+        print(image.shape, nx, ny)
+        raise ValueError("Rounding problem!")
+    return image
 
 
 if __name__ == '__main__':
