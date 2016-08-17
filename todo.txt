@@ -1,3 +1,4 @@
 
 GUI Toolkit:
-- Prevent panels from overlapping.
+-> Add button elements.
+-> Refine split texture scaling.

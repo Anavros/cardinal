@@ -8,7 +8,7 @@ import malt
 def locate_div(x, y, gui):
     for e in gui.elements:
         if e.x < x < e.w+e.x and e.y < y < e.h+e.y:
-            print("Element '{}' has been triggered!".format(e.handle))
+            return e.handle
 
 
 class GUI(object):
@@ -30,6 +30,7 @@ class Element(object):
         self.texture = texture
 
 
+# TODO: cleanup
 def build_gui(config_file, screen_w, screen_h):
     elements = []
     (xb, yb, wb, hb) = (0, 0, 0, 0)
@@ -89,24 +90,6 @@ def _corners(anchor, percent, screen_w, screen_h, buffers=(0, 0, 0, 0)):
 def render(gui):
     texture = np.full((gui.h, gui.w, 4), 255, dtype=np.uint8)
     for e in gui.elements:
-        #print(gui.x, gui.y, gui.w, gui.h)
-        print(e.x, e.y, e.w, e.h)
-        input()
-        #print(e.xb, e.yb, e.wb, e.hb)
         texture[e.y:e.h+e.y, e.x:e.w+e.x, :] = e.texture
-        #texture[e.y+e.yb:e.h+e.y+e.hb, e.x+e.xb:e.w+e.x+e.wb, :] = e.texture
     texture = np.flipud(texture) # XXX cause I can't figure why it's upside down
     return texture
-
-#bird_selector_bar = {}
-
-r"""
-There are two kinds of gui graphics: things that stretch and things that don't.
-Some graphics need to be pixel-perfect to be sharp. So we have to have some sort of
-feature that allows very specific pixel dimensions, and not just percentages of the
-screen.
-
-...Maybe we shouldn't even worry about this stuff yet. We could just make the screen
-a static size and forget about it all until later. It's really kind of an advanced
-feature. It's not that important.
-"""

@@ -8,18 +8,21 @@ from vispy.util import transforms
 import interface
 
 def main():
-    w = 800
-    h = 600
+    logical_w = 300
+    logical_h = 200
+    scale = 2
+    pixel_w = logical_w*scale
+    pixel_h = logical_h*scale
     app.use_app('glfw')
     canvas = app.Canvas(
         title="Birdies",
-        size=(w, h),
+        size=(pixel_w, pixel_h),
         keys="interactive",
         resizable=False
     )
     program = build_program('vertex.glsl', 'fragment.glsl')
 
-    gui = interface.build_gui('config.gui', w, h)
+    gui = interface.build_gui('config.gui', logical_w, logical_h)
     texture = gloo.Texture2D(interface.render(gui))
     #texture = gloo.Texture2D(io.imread('test.png'))
 
@@ -36,33 +39,26 @@ def main():
     # maybe we just use one vbo quad and redraw it over and over with different
     # textures in different locations...
     #program['u_ortho'] = transforms.ortho(-1, 1, -1, 1, -1, 1) # not necessary?
+    program['u_scale'] = scale
 
     @canvas.connect
     def on_mouse_press(event):
         (x, y) = event.pos
+        (x, y) = (int(x/scale), int(y/scale))
         print("Click: ", end='')
-        interface.locate_div(x, y, gui)
+        handle = interface.locate_div(x, y, gui)
+        if handle:
+            print("Element '{}' has been triggered!".format(handle))
+        else:
+            print()
 
     @canvas.connect
     def on_draw(event):
         gloo.clear((1,1,1,1))
         program.draw('triangle_strip')
 
-#        for (side, x, y, color) in fit_test:
-#            scale, slide = gui.fit(side, x, y)
-#            program['u_scale'] = scale
-#            program['u_slide'] = slide
-#            program['u_color'] = color
-#            program.draw('triangle_strip')
-
     canvas.show()
     app.run()
-
-
-def draw_quads(program, slides):
-    for s in slides:
-        program['u_slide'] = s
-        program.draw('triangle_strip')
 
 
 def build_program(v_path, f_path):
