@@ -11,13 +11,8 @@ def stretch(path, new_x, new_y, d):
     scale_y = int(np.ceil(new_y/(iy - d*2)))
     scale_w = int(((ix-(2*d))*scale_x)+(2*d))
     scale_h = int(((iy-(2*d))*scale_y)+(2*d))
-    #print(scale_x, scale_y, scale_w, scale_h)
-    #input()
 
     new_image = np.full((scale_h, scale_w, iz), 256, dtype=image.dtype)
-    #print(image.shape, scale_x, scale_y)
-    #print(new_image.shape)
-    #input()
     new_image[  : d,  d:-d, :] = _scale(image[  : d,  d:-d, :], scale_x, 1) # top
     new_image[-d:  ,  d:-d, :] = _scale(image[-d:  ,  d:-d, :], scale_x, 1) # bot
     new_image[ d:-d,   : d, :] = _scale(image[ d:-d,   : d, :], 1, scale_y) # lft
@@ -40,8 +35,6 @@ def save(path, new_path, x, y, d):
 
 def _scale(image, y, x):
     v = np.repeat(np.repeat(image, x, axis=0), y, axis=1)
-    #print(image.shape, x, y)
-    #print(v.shape, x, y)
     return v
 
 

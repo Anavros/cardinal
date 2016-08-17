@@ -72,7 +72,7 @@ def load(filepath, options=None):
             command = words.pop(0).lower() # non-case-sensitive
             expected_args = _get_args(command, allowed_syntaxes)
             final_args = _verify_arguments(words, expected_args)
-            lines.append((command, final_args))
+            lines.append(Response(command, final_args))
     return lines
 
 

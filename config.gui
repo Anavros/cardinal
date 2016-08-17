@@ -1,10 +1,9 @@
 
 # declare syntax within the config file
-? div handle anchor[top|bottom|left|right] texture float(size)
-? but container handle texture
+? stretch handle anchor[top|bottom|left|right] texture float(size) int(cut)
+? button parent handle texture
 
-div right       right   nine.png 0.3
-div colors      left    nine.png 0.1
-div menu        bottom  nine.png 0.4
+stretch colors      left    nine.png 0.1 12
+stretch menu        bottom  nine.png 0.4 12 
 
-but menu menu_button button.png
+button menu menu_button button.png

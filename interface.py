@@ -9,6 +9,11 @@ def locate_div(x, y, gui):
     for element in gui.elements:
         e = element.rect
         if e.x < x < e.w+e.x and e.y < y < e.h+e.y:
+            for com in element.components: # candidate for recursion
+                c = com.rect
+                if c.x < x < c.w+c.x and c.y < y < c.h+c.y:
+                    return com.handle
+            # if not on component
             return element.handle
 
 
@@ -24,10 +29,14 @@ class Element(object):
         self.handle = handle
         self.rect = rect
         self.texture = texture
+        self.components = []
 
 
-class Button(object):
-    pass
+class Component(object): # practically the same as Element()
+    def __init__(self, handle, rect, texture):
+        self.handle = handle
+        self.rect = rect
+        self.texture = texture
 
 
 class Quad(object):
@@ -42,30 +51,36 @@ def build_gui(config_file, screen_w, screen_h):
     elements = []
     buf = Quad()
     scr = Quad(0, 0, screen_w, screen_h)
-    for (command, args) in malt.load(config_file):
-        if command == 'div':
+    for args in malt.load(config_file):
+        if args.cmd == 'stretch':
             ele, buf = _build_div(args, scr, buf)
             elements.append(ele)
-        elif command == 'button':
-            pass
+        elif args.cmd == 'button':
+            com = _build_button(args)
+            # NOTE throws IndexError
+            _link_component(com, args.parent, elements) # XXX error prone and clunky
     return GUI(elements, scr, buf)
 
 
+def _link_component(component, parent, elements):
+    for e in elements:
+        if e.handle == parent:
+            e.components.append(component)
+            return
+    raise IndexError("No parent container named {}.".format(args.parent))
+
+
 def _build_div(args, scr, buf):
-
-    handle = args['handle']
-    anchor = args['anchor']
-    tex_path = args['texture']
-    size = args['size']
-
-    ele, buf = _fit_element(anchor, size, scr, buf)
-    texture = splitnine.stretch(tex_path, ele.w, ele.h, 12) # TODO
-
-    return Element(handle, ele, texture), buf
+    ele, buf = _fit_element(args.anchor, args.size, scr, buf)
+    texture = splitnine.stretch(args.texture, ele.w, ele.h, args.cut)
+    return Element(args.handle, ele, texture), buf
 
 
-def _build_button():
-    pass
+def _build_button(args):
+    texture = io.imread(args.texture)
+    (tx, ty, tz) = texture.shape
+    rect = Quad(0, 0, tx, ty)
+    return Component(args.handle, rect, texture)
 
 
 def _fit_element(anchor, percent, screen_quad, buffer_quad):
@@ -104,8 +119,13 @@ def _fit_element(anchor, percent, screen_quad, buffer_quad):
 
 def render(gui):
     texture = np.full((gui.scr.h, gui.scr.w, 4), 255, dtype=np.uint8)
-    for e in gui.elements:
-        r = e.rect
-        texture[r.y:r.h+r.y, r.x:r.w+r.x, :] = e.texture
+    for element in gui.elements:
+        er = element.rect
+        texture[er.y:er.h+er.y, er.x:er.w+er.x, :] = element.texture
+        for component in element.components:
+            cr = component.rect
+            cr.x += er.x
+            cr.y += er.y
+            texture[cr.y:cr.h+cr.y, cr.x:cr.w+cr.x, :] = component.texture
     texture = np.flipud(texture) # XXX cause I can't figure why it's upside down
     return texture

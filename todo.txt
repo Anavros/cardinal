@@ -2,3 +2,4 @@
 GUI Toolkit:
 -> Add button elements.
 -> Refine split texture scaling.
+-> Collapse splitnine and interface into one module.
