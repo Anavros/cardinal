@@ -7,6 +7,7 @@ from vispy import io
 def stretch(path, new_x, new_y, d):
     image = io.imread(path)
     (ix, iy, iz) = image.shape
+    #print("image '{}' is".format(path), "transparent" if iz == 4 else "opaque")
     scale_x = int(np.ceil(new_x/(ix - d*2)))
     scale_y = int(np.ceil(new_y/(iy - d*2)))
     scale_w = int(((ix-(2*d))*scale_x)+(2*d))

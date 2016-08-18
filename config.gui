@@ -2,9 +2,9 @@
 # declare syntax within the config file
 ? nest parent handle anchor[top|bottom|left|right] texture int(cut) float(size) int(mar) int(pad)
 
-nest canvas colors          left    nine.png    12  0.1 0 0
-nest canvas menu            bottom  nine.png    12  0.4 0 10
-nest canvas other_bar       right   nine.png    12  0.2 0 0
+nest canvas colors          left    alpha.png    12  0.1 0 0
+nest canvas menu            bottom  alpha.png    12  0.4 0 0
+nest canvas other_bar       right   alpha.png    12  0.2 0 0
 
-nest menu   but1            top     button.png  2   0.5 0 0
-nest menu   but2            right   button.png  2   0.2 0 0
+#nest menu   but1            top     button.png  2   0.5 10 0
+#nest menu   but2            right   button.png  2   0.2 0 0

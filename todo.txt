@@ -4,6 +4,6 @@ GUI Toolkit:
 -> Refine split texture scaling.
 -> Collapse splitnine and interface into one module.
 -> Fix placement rounding error bug.
--> Enable transparent textures.
+-> Enable transparent textures.*--
 -> Add more anchoring choices.
 -> Enable extra padding inside divisions.

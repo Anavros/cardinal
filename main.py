@@ -3,6 +3,7 @@
 
 import numpy as np
 from vispy import app, gloo, io
+from vispy.gloo import gl
 from vispy.util import transforms
 
 import interface
@@ -20,14 +21,22 @@ def main():
         keys="interactive",
         resizable=False
     )
+
+    # should enable transparency?
+    gl.glEnable(gl.GL_BLEND)
+    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+
     program = build_program('vertex.glsl', 'fragment.glsl')
     blank = np.full((logical_h, logical_w, 4), 255, dtype=np.uint8)
 
     elements = interface.build_gui('config.gui', logical_w, logical_h)
-    texture = gloo.Texture2D(np.flipud(interface.xrender(elements, blank)))
+    render = np.flipud(interface.xrender(elements, blank))
+    # v-- this looks fine, the transparency and flipping problems are both gl
+    io.imsave('rendered_texture.png', render)
+    texture = gloo.Texture2D(render, format='rgba')
     #texture = gloo.Texture2D(io.imread('test.png'))
 
-    program['texture1'] = texture
+    program['tex_color'] = texture
     # not supposed to be negative! 0 -> 1, not -1 -> 1
     program['a_texcoord'] = np.array([
         (0, 0), (0, 1),
