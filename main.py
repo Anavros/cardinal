@@ -6,7 +6,9 @@ from vispy import app, gloo, io
 from vispy.gloo import gl
 from vispy.util import transforms
 
-import interface
+#import interface
+import image
+import spacing
 
 def main():
     logical_w = 300
@@ -17,9 +19,11 @@ def main():
     app.use_app('glfw')
     canvas = app.Canvas(
         title="Birdies",
-        size=(pixel_w, pixel_h),
+        #size=(pixel_w, pixel_h),
+        size=(logical_w, logical_h),
         keys="interactive",
-        resizable=False
+        resizable=False,
+        px_scale=2
     )
 
     # should enable transparency?
@@ -29,12 +33,17 @@ def main():
     program = build_program('vertex.glsl', 'fragment.glsl')
     blank = np.full((logical_h, logical_w, 4), 255, dtype=np.uint8)
 
-    elements = interface.build_gui('config.gui', logical_w, logical_h)
-    render = np.flipud(interface.xrender(elements, blank))
+    #elements = interface.build_gui('config.gui', logical_w, logical_h)
+    #render = np.flipud(interface.xrender(elements, blank))
     # v-- this looks fine, the transparency and flipping problems are both gl
-    io.imsave('rendered_texture.png', render)
-    texture = gloo.Texture2D(render, format='rgba')
+    #io.imsave('rendered_texture.png', render)
+    #texture = gloo.Texture2D(render, format='rgba')
     #texture = gloo.Texture2D(io.imread('test.png'))
+
+    gui = spacing.create('builder.layout', logical_w, logical_h)
+    render = image.render_as_colors(gui)
+    io.imsave('rendered_texture.png', render)
+    texture = gloo.Texture2D(render)
 
     program['tex_color'] = texture
     # not supposed to be negative! 0 -> 1, not -1 -> 1
@@ -54,11 +63,11 @@ def main():
     @canvas.connect
     def on_mouse_press(event):
         (x, y) = event.pos
-        (x, y) = (int(x/scale), int(y/scale))
+        #(x, y) = (int(x/scale), int(y/scale))
         print("Click: ", end='')
-        handle = interface.locate(x, y, elements)
-        if handle:
-            print("Element '{}' has been triggered!".format(handle))
+        (panel, element) = gui.at(x, y)
+        if panel:
+            print("Element '{}' has been triggered!".format(panel.handle))
         else:
             print()
 

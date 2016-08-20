@@ -15,6 +15,47 @@ class Element(object):
         self.components = []
 
 
+class Panel(object):
+    def __init__(self, handle):
+        self.handle = handle
+        self.spacing = None
+        self.image_path = None
+
+
+# two ways to render element:
+# load texture from ele.image_path and place at ele.x, ele.y
+# create image programmatically, size with ele.wh and place with ele.xy
+
+# or should we store textures within elements?
+# doesn't work very well if it's a dynamic texture like a minimap or text or something
+# so no
+# or maybe it does work ok
+# you'd have to pass them in anyway, and if they're already in the object
+# it makes it easier to render everything in one go
+
+# and then what about multiple textures for one element
+# like a button with normal, clicked, and hovered over textures
+# maybe each object can have a state?
+# just arbitrary, specified in the config file
+# and then depending on the state, the programmer could pass in different textures?
+# but the config file stores the textures
+# so the programmer shouldn't have to pass them in
+# maybe all of the textures can be included in a dict or something
+
+# so each query for an element would return its handle and state
+# and there would be a rendering function that automatically handled all of that
+# and probably a function to set a texture on an object
+
+# well, all of this rendering and passing around should really be done by the gpu
+# the gui really should only be managing the placement of things
+# just a means to turn coordinates into handles
+
+
+class Button(object):
+    def __init__(self, handle):
+        self.handle = handle
+
+
 class Quad(object):
     def __init__(self, x=0, y=0, w=0, h=0):
         self.x = x
@@ -27,6 +68,25 @@ class Quad(object):
         return Quad(self.x+n, self.y+n, self.w+n, self.h+n)
     def __repr__(self):
         return "Quad({}, {}, {}, {})".format(self.x, self.y, self.w, self.h)
+
+
+class UserInterface(object):
+    def __init__(self):
+        self.panels = []
+        self.groups = []
+        self.buttons = []
+
+
+def create(config_file, width, height):
+    # spawn a new UserInterface()
+    # load elements from config file into appropriate lists
+    # space panels within interface
+    # for each panel space elements within panel
+    # return interface
+    pass
+
+# should textures and rendering be done in a separate module?
+# only leave spacing for this one?
 
 
 def locate(x, y, elements):

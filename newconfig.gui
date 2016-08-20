@@ -1,0 +1,188 @@
+
+panel menu
+    fit menu bottom
+panel colors
+panel other
+
+element but1 menu
+    state normal but1
+element but2 menu
+
+# fitting modes
+# anchor percent -> stick to an edge and take a constant percentage of screen space
+#       probably not good for varying screen sizes
+#       the proportions should get smaller as the screen gets bigger
+#       so that elements stay about the same size
+# anchor size -> stick to an edge and maintain constant pixel size
+#       better, but prone to stiffness?
+#       fills one dimension but maintains steady on another
+# anchor dynamic -> sticks to one side but changes to fit its contents
+
+# anchor top, bottom, left, right
+# middle? float in the middle, for pop-up menus and whatnot
+
+# pixel perfect texture
+# fill sideways
+# fill bothways
+
+# this raises the question, do we ever want different gui sizes?
+# like should the elements ever not be a certain pixel size?
+# sure the panels stretch and have extra space but the elements themselves
+# they pretty much never change
+# unless there is an especially small or large screen
+# but that's really an edge case
+# and should be done with power of 2 scaling anyway
+# so we don't need any percentages at all
+# everything should be pixelwise
+
+panel
+element
+fit
+state
+
+panel menu
+    fit menu bottom fillx200
+    stretch menu bottom 
+element button_one menu
+    fit button_one float
+
+
+#A menu at the bottom of the screen
+#that stretches across the whole way lengthwise
+#and is however tall
+#and it has maybe 8 buttons inside of it
+#evenly spaced in a straight row
+#if you resize the screen, the space between the buttons should compress
+#until you get to a certain point were there wouldn't be enough space
+#vertical stretching wouldn't do anything, the menu is pixel perfect vertically
+
+panel menu bottom
+group menu_buttons menu horizontal
+
+#and I also want a bar on the left
+#that takes up the rest of the verical space after the menu
+#and has 8 buttons
+#lined up in a nice row vertically and spaced horizontally
+
+panel color_bar left
+group color_buttons color_bar vertical
+
+#but I also want a pause menu
+#with a little frame in the middle of the screen, floating
+#that's the same size and always in the middle when the screen changes
+#and there are 5 buttons, stretching across horizontally
+#and spaced vertically
+
+panel pause_menu center
+group pause_buttons pause_menu vertical
+
+#but in the future
+#I might also like multiple rows of buttons
+
+panel backpack right
+group column_one backpack vertical
+group column_two backpack vertical
+group column_thr backpack vertical
+
+#actually an easier way to do that might be to wrap button placement
+
+panel backpack right
+group pack_slots backpack [method]
+
+# fitting methods
+# vertical -> center each element horizontally and space them out vertically
+# horizontal -> vice versa
+# rows -> specify a number of columns and rows to be spaced
+# actually everything could be in rows
+
+group pack_slots backpack 3x8
+
+group menu_buttons menu 8x1
+
+# yeah that works nicely
+# you could even access the handles by indexing
+
+# then in the texture spec you can say to stretch until padding or just stay centered
+
+texture pause_buttons nine.png
+    stretch pause_buttons 12
+texture pack_slots button.png
+
+# actually that might be different from textures
+# cause the bounding box would need to move too
+
+# maybe that could be a more advanced feature
+# for now let's say that panels stretch and buttons don't
+
+# so our final layout would be
+
+? panel handle
+? size axis[x|y] handle anchor[top|bottom|left|right|center] len pad
+panel menu 3x1
+    size x menu center 0
+    size y menu bottom 40
+    pad menu 10
+    background etc etc
+panel color_bar left    20      center  expand  10      10
+panel other_bar right   40      center  expand  10      10
+panel pause     center  80      center  80      10      10
+
+? group dim handle parent xsize ysize
+group 3x1 menu_buttons  menu        32      32
+group 1x8 color_buttons color_bar   16      16
+group 1x5 pause_buttons pause       expand  16
+
+# can there be multiple groups? that wouldn't make sense
+# each group fills the space it has available
+# and you could just add another row or something
+# so each panel should have a single group
+# or each panel is a single group that acts as one
+
+# by default this would make a 32*3 x 32*1 box at 0,0
+div menu 3x1 32x32
+    # add interior padding, making the box 32*3+10 etc
+    pad menu 10x10
+    # move the box to the center horizontally and stretch it; i.e. scr.w x 32
+    place_x menu center expand
+    # move the box vertically to sit on the bottom and become 40 px tall
+    # which might actually be a problem because it's supposed to be 42 with padding
+    place_y menu bottom 40
+    # each interior button expands to fill the space
+    # so if the screen were 300 px wide -> 300/3 == 100 space for each box
+    # placing 32 wide box in the middle becomes (100-32)/2 34pad-32box-34pad
+    # so as a whole: left -> 34 -> 32 -> 34 -> 34 -> 32 -> 34 -> 34 -> 32 -> 34 -> right
+    # for a total of 300
+    # and vertically, it goes top-pad-box-pad-bottom just the same
+
+# covers everything very simply but super cryptic and hard to read
+div menu 3x1 32x32 0x1 0x40 10x10
+
+? div   name    elements    element_size    x_anchor    y_anchor   div_size    padding
+div     menu    3x1         32x32           center      bottom     expandx40   10x10
+
+div menu 3:1 32:32 center:bottom expand:40 10:10
+div pause 1:5 expand:16 center:center 80:80 10:20
+
+div menu    3:1 32:32 center:expand:10 bottom:40:10
+div pause   1:5 expand:32 center:80:20 center:80:10
+
+div pause 1x5 (expand)x16
+    pad pause 10x20
+    place_x pause center 80
+    place_y pause center 80
+
+
+div menu 3 1
+    ele menu 32 32
+    fit menu bottom 80
+    pad menu 10 10
+
+div pause 1 5
+    ele pause -1 16
+    fit pause center 80
+    pad pause 10 20
+
+div text_box 1 1
+    fit text_box top 80
+    pad text_box 0 0
+    ele text_box fill fill
