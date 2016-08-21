@@ -10,6 +10,65 @@ CONFIG_SYNTAX = [
 ]
 
 
+def create(config_file, width, height):
+    gui = Interface(width, height)
+    for args in malt.load(config_file, CONFIG_SYNTAX):
+        if args == 'div':
+            gui.add(Panel(args.handle, args.cols, args.rows))
+        elif args == 'pad':
+            panel = gui.get(args.handle)  # throws ValueError
+            panel.pad_left = args.x
+            panel.pad_right = args.x
+            panel.pad_top = args.y
+            panel.pad_bottom = args.y
+        elif args == 'fit':
+            panel = gui.get(args.handle)
+            panel.size = args.size
+            panel.anchor = args.anchor
+        elif args == 'ele':
+            panel = gui.get(args.handle)
+            panel.element_w = args.x
+            panel.element_h = args.y
+
+    # TODO throw errors if dimensions are too big
+    return space(gui)
+
+
+def space(gui):
+    offset = { 'top': 0, 'bottom': 0, 'left': 0, 'right': 0 }
+    for p in gui.panels:
+        # Position the panel within the screen.
+        available_w = gui.w - offset['left'] - offset['right']
+        available_h = gui.h - offset['top'] - offset['bottom']
+        p.w = p.size if p.anchor in ['left', 'right'] else available_w
+        p.h = p.size if p.anchor in ['top', 'bottom'] else available_h
+        p.x = offset['left'] if p.anchor != 'right' else available_w - p.size
+        p.y = offset['top'] if p.anchor != 'bottom' else available_h - p.size
+        offset[p.anchor] += p.size
+
+        # Position all sub-elements within the panel.
+        total_w = p.w - p.pad_left - p.pad_right
+        total_h = p.h - p.pad_top - p.pad_bottom
+        (c_space, c_pad) = _fit(total_w, p.cols, p.element_w)
+        (r_space, r_pad) = _fit(total_h, p.rows, p.element_h)
+        for c in range(p.cols):
+            for r in range(p.rows):
+                e = Element("{}[{}][{}]".format(p.handle, c, r))
+                e.x = c*c_space + c_pad + p.x
+                e.w = p.element_w
+                e.y = r*r_space + r_pad + p.y
+                e.h = p.element_h
+                p.elements.append(e)
+    return gui
+
+
+
+def _fit(total_space, num_items, item_size):
+    space_per_item = int(total_space/num_items)
+    pad = int((space_per_item - item_size)/2)
+    return (space_per_item, pad)
+
+
 # TODO: come up with a better name
 class Interface(object):
     def __init__(self, w, h):
@@ -78,93 +137,3 @@ class Element(object):
         self.y = 0
         self.w = 0
         self.h = 0
-
-
-def create(config_file, width, height):
-    gui = Interface(width, height)
-    for args in malt.load(config_file, CONFIG_SYNTAX):
-        if args == 'div':
-            gui.add(Panel(args.handle, args.cols, args.rows))
-            # TODO: default arguments
-            # actually that should be in the class spec
-        elif args == 'pad':
-            panel = gui.get(args.handle)  # throws ValueError
-            panel.pad_left = args.x
-            panel.pad_right = args.x
-            panel.pad_top = args.y
-            panel.pad_bottom = args.y
-        elif args == 'fit':
-            panel = gui.get(args.handle)
-            panel.size = args.size
-            panel.anchor = args.anchor
-        elif args == 'ele':
-            panel = gui.get(args.handle)
-            panel.element_w = args.x
-            panel.element_h = args.y
-
-    # Fitting
-    # First the panels within the canvas
-    # TODO throw errors if dimensions are too big
-    for panel in gui.panels:
-        if panel.anchor == 'top':
-            panel.w = gui.w - gui.pad_left - gui.pad_right
-            panel.h = panel.size
-            panel.x = gui.pad_left
-            panel.y = gui.pad_top
-            gui.pad_top += panel.h
-        elif panel.anchor == 'bottom':
-            panel.w = gui.w - gui.pad_left - gui.pad_right
-            panel.h = panel.size
-            panel.x = gui.pad_left
-            panel.y = gui.h - gui.pad_bottom - panel.size
-            gui.pad_bottom += panel.size
-        elif panel.anchor == 'left':
-            panel.w = panel.size
-            panel.h = gui.h - gui.pad_top - gui.pad_bottom
-            panel.x = gui.pad_left
-            panel.y = gui.pad_top
-            gui.pad_left += panel.size
-        elif panel.anchor == 'right':
-            panel.w = panel.size
-            panel.h = gui.h - gui.pad_top - gui.pad_bottom
-            panel.x = gui.w - gui.pad_right - panel.size
-            panel.y = gui.pad_top
-            gui.pad_right += panel.size
-        elif panel.anchor == 'center':
-            # placing a center panel will prevent any further panels
-            # TODO integrate limited size, e.g. 80 by 80
-            panel.w = gui.w - gui.pad_left - gui.pad_right
-            panel.h = gui.h - gui.pad_top - gui.pad_bottom
-            panel.x = gui.pad_left
-            panel.y = gui.pad_top
-            gui.pad_left = gui.w
-            gui.pad_right = gui.w
-            gui.pad_top = gui.h
-            gui.pad_bottom = gui.h
-        else:
-            raise ValueError("Invalid anchor: '{}'!".format(anchor))
-    # Then the elements within the panels
-    for panel in gui.panels:
-        total_w = panel.w - panel.pad_left - panel.pad_right
-        total_h = panel.h - panel.pad_top - panel.pad_bottom
-        element_w = panel.element_w
-        element_h = panel.element_h
-        if total_w < element_w*panel.cols or total_h < element_h*panel.rows:
-            raise ValueError("({}, {}) can not fit ({}x{}, {}x{}) elements!".format(
-                total_w, total_h, panel.cols, element_w, panel.rows, element_h))
-        w_per = int(total_w/panel.cols)
-        h_per = int(total_h/panel.rows)
-        assert w_per > 0 and h_per > 0
-        pad_w = int((w_per-element_w)/2)
-        pad_h = int((h_per-element_h)/2)
-        assert pad_w > 0 and pad_h > 0
-        for c in range(panel.cols):
-            for r in range(panel.rows):
-                e = Element("{}[{}][{}]".format(panel.handle, c, r))
-                e.x = c*w_per + pad_w + panel.x
-                e.w = element_w
-                e.y = r*h_per + pad_h + panel.y
-                e.h = element_h
-                panel.elements.append(e)
-        #print(panel.handle, len(panel.elements))
-    return gui
