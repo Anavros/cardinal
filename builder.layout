@@ -1,3 +1,12 @@
 
 div menu 3 1
     fit menu bottom 80
+    pad menu 5 5
+    ele menu 16 16
+
+div left_bar 1 8
+    fit left_bar left 40
+    ele left_bar 4 4
+
+div rest 1 1
+    fit rest center 80

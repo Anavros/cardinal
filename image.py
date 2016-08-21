@@ -10,4 +10,10 @@ def render_as_colors(gui):
         color[:, :, 3] = 255
         color_box = np.repeat(np.repeat(color, panel.h, axis=0), panel.w, axis=1)
         blank_tex[panel.y:panel.h+panel.y, panel.x:panel.x+panel.w, :] = color_box
+        for e in panel.elements:
+            ele_color = np.random.randint(256, size=(1, 1, 4))
+            ele_color[:, :, 3] = 255
+            ele_color_box = np.repeat(np.repeat(ele_color, e.h, axis=0), e.w, axis=1)
+            print(e.x, e.y, e.w, e.h, ele_color)
+            blank_tex[e.y:e.h+e.y, e.x:e.x+e.w, :] = ele_color_box
     return blank_tex

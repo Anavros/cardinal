@@ -34,7 +34,6 @@ def main():
     blank = np.full((logical_h, logical_w, 4), 255, dtype=np.uint8)
 
     #elements = interface.build_gui('config.gui', logical_w, logical_h)
-    #render = np.flipud(interface.xrender(elements, blank))
     # v-- this looks fine, the transparency and flipping problems are both gl
     #io.imsave('rendered_texture.png', render)
     #texture = gloo.Texture2D(render, format='rgba')
@@ -42,6 +41,7 @@ def main():
 
     gui = spacing.create('builder.layout', logical_w, logical_h)
     render = image.render_as_colors(gui)
+    render = np.flipud(render)
     io.imsave('rendered_texture.png', render)
     texture = gloo.Texture2D(render)
 
@@ -63,13 +63,19 @@ def main():
     @canvas.connect
     def on_mouse_press(event):
         (x, y) = event.pos
-        #(x, y) = (int(x/scale), int(y/scale))
+        (x, y) = (int(x/scale), int(y/scale))
         print("Click: ", end='')
-        (panel, element) = gui.at(x, y)
-        if panel:
-            print("Element '{}' has been triggered!".format(panel.handle))
-        else:
+        try:
+            panel = gui.at(x, y)
+        except ValueError:
             print()
+        else:
+            try:
+                element = panel.at(x, y)
+            except ValueError:
+                print("Panel '{}'".format(panel.handle))
+            else:
+                print("Panel '{}', Element '{}'".format(panel.handle, element.handle))
 
     @canvas.connect
     def on_draw(event):

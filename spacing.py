@@ -3,7 +3,7 @@ import malt
 import numpy as np
 
 CONFIG_SYNTAX = [
-    "div handle int(x) int(y)",
+    "div handle int(cols) int(rows)",
     "fit handle anchor[top|bottom|left|right|center] int(size)",
     "ele handle int(x) int(y)",
     "pad handle int(x) int(y)",
@@ -41,12 +41,15 @@ class Interface(object):
         """Return the panel located at (x, y) in logical pixels."""
         for p in self.panels:
             if p.x <= x <= p.w+p.x and p.y <= y <= p.h+p.y:
-                return (p, p.at(x, y))
+                return p
+        raise ValueError("Panel not found.")
 
 
 class Panel(object):
-    def __init__(self, handle, x_elements, y_elements):
+    def __init__(self, handle, cols, rows):
         self.handle = handle
+        self.rows = rows
+        self.cols = cols
         self.x = 0
         self.y = 0
         self.w = 0
@@ -57,22 +60,33 @@ class Panel(object):
         self.pad_bottom = 0
         self.size = 0
         self.anchor = None
-        self.elements = [[]]
-        self.shape = (x_elements, y_elements)
         self.element_w = 0
         self.element_h = 0
+        self.elements = []
 
     def at(self, x, y):
-        pass
+        for e in self.elements:
+            if e.x <= x <= e.w+e.x and e.y <= y <= e.h+e.y:
+                return e
+        raise ValueError("Element not found.")
+
+
+class Element(object):
+    def __init__(self, handle):
+        self.handle = handle
+        self.x = 0
+        self.y = 0
+        self.w = 0
+        self.h = 0
 
 
 def create(config_file, width, height):
     gui = Interface(width, height)
     for args in malt.load(config_file, CONFIG_SYNTAX):
         if args == 'div':
-            gui.add(Panel(args.handle, args.x, args.y))
-            # fit the panel internally?
-            # fitting should all happen at the same time
+            gui.add(Panel(args.handle, args.cols, args.rows))
+            # TODO: default arguments
+            # actually that should be in the class spec
         elif args == 'pad':
             panel = gui.get(args.handle)  # throws ValueError
             panel.pad_left = args.x
@@ -130,4 +144,27 @@ def create(config_file, width, height):
         else:
             raise ValueError("Invalid anchor: '{}'!".format(anchor))
     # Then the elements within the panels
+    for panel in gui.panels:
+        total_w = panel.w - panel.pad_left - panel.pad_right
+        total_h = panel.h - panel.pad_top - panel.pad_bottom
+        element_w = panel.element_w
+        element_h = panel.element_h
+        if total_w < element_w*panel.cols or total_h < element_h*panel.rows:
+            raise ValueError("({}, {}) can not fit ({}x{}, {}x{}) elements!".format(
+                total_w, total_h, panel.cols, element_w, panel.rows, element_h))
+        w_per = int(total_w/panel.cols)
+        h_per = int(total_h/panel.rows)
+        assert w_per > 0 and h_per > 0
+        pad_w = int((w_per-element_w)/2)
+        pad_h = int((h_per-element_h)/2)
+        assert pad_w > 0 and pad_h > 0
+        for c in range(panel.cols):
+            for r in range(panel.rows):
+                e = Element("{}[{}][{}]".format(panel.handle, c, r))
+                e.x = c*w_per + pad_w + panel.x
+                e.w = element_w
+                e.y = r*h_per + pad_h + panel.y
+                e.h = element_h
+                panel.elements.append(e)
+        #print(panel.handle, len(panel.elements))
     return gui
