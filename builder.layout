@@ -1,13 +1,9 @@
 
-div left_bar 1 8
-    fit left_bar left 40
-    ele left_bar 20 16
+#? div handle anchor[top|bottom|left|right|center] int(size)
+#? ele handle int(cols) int(rows) int(w) int(h) int(pad)
 
-div menu 3 1
-    fit menu bottom 80
-    pad menu 5 5
-    ele menu 32 32
+div menu bottom 80
+ele menu 3 1 32 32 10
 
-#div rest 2 2
-    #fit rest center 80
-    #ele rest 40 40
+div left_bar left 40
+ele left_bar 1 8 8 8 5

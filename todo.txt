@@ -7,8 +7,7 @@ GUI Toolkit:
 -> Enable extra padding inside divisions.
 -> Implement texture scaling as a shader function.
 
-GUI Hierarchy:
--> GUI
--> Panels
--> Groups
--> Elements
+Spacing Hierarchy:
+-> Window
+-> Portion
+-> Nibblet
