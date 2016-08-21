@@ -14,6 +14,5 @@ def render_as_colors(gui):
             ele_color = np.random.randint(256, size=(1, 1, 4))
             ele_color[:, :, 3] = 255
             ele_color_box = np.repeat(np.repeat(ele_color, e.h, axis=0), e.w, axis=1)
-            print(e.x, e.y, e.w, e.h, ele_color)
             blank_tex[e.y:e.h+e.y, e.x:e.x+e.w, :] = ele_color_box
     return blank_tex

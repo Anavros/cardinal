@@ -27,7 +27,7 @@ class Window(object):
         self.required_w = 0
         self.required_h = 0
         self.panels = []
-        self.offset = {'top':0, 'bottom':0, 'left':0, 'right':0}
+        self.offset = {'top':0, 'bottom':0, 'left':0, 'right':0, 'center':0}
 
     def get(self, handle):
         """Returns the first panel found whose handle matches the given string.
@@ -39,8 +39,13 @@ class Window(object):
         raise ValueError("Panel '{}' does not exist!".format(handle))
 
     def insert(self, p, anchor, size):
+        if self.offset['center']:
+            raise ValueError("The window is already full!")
         available_w = self.w - self.offset['left'] - self.offset['right']
         available_h = self.h - self.offset['top'] - self.offset['bottom']
+        if (anchor in ['top', 'bottom'] and size > available_h) or \
+        (anchor in ['left', 'right'] and size > available_w):
+            raise ValueError("Panel {} is too large!.".format(p.handle))
         p.w = size if anchor in ['left', 'right'] else available_w
         p.h = size if anchor in ['top', 'bottom'] else available_h
         p.x = self.offset['left'] if anchor != 'right' else available_w - size
@@ -75,15 +80,17 @@ class Panel(object):
             raise ValueError("Elements are too big! {}".format(self.handle))
         div_w = int(internal_w/cols)
         div_h = int(internal_h/rows)
-        pad_w = div_w - goal_w
-        pad_h = div_h - goal_h
+        ext_w = internal_w - div_w*cols
+        ext_h = internal_h - div_h*rows
+        pad_w = div_w - goal_w if goal_w > 0 else 0
+        pad_h = div_h - goal_h if goal_h > 0 else 0
         for c in range(cols):
             for r in range(rows):
                 e = Element("{}[{}][{}]".format(self.handle, c, r))
-                e.x = self.x + c*div_w + int(pad_w/2)
-                e.w = goal_w
-                e.y = self.y + r*div_h + int(pad_h/2)
-                e.h = goal_h
+                e.x = self.x + int(pad/2) + int(ext_w/2) + c*div_w + int(pad_w/2)
+                e.w = goal_w if goal_w > 0 else div_w
+                e.y = self.y + int(pad/2) + int(ext_h/2) + r*div_h + int(pad_h/2)
+                e.h = goal_h if goal_h > 0 else div_h
                 self.elements.append(e)
 
     def at(self, x, y):
