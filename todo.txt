@@ -1,13 +1,19 @@
 
-GUI Toolkit:
--> Add button elements.
--> Refine split texture scaling.
--> Collapse splitnine and interface into one module.
--> Add more anchoring choices.
--> Enable extra padding inside divisions.
--> Implement texture scaling as a shader function.
+Spacing Toolkit:
+-> Rename objects to make a little more sense.
 
-Spacing Hierarchy:
--> Window
--> Portion
--> Nibblet
+General Program:
+-> Replace color rendering with actual textures.
+
+Demo:
+-> Customize a birdie.
+-> Display work-in-progress image in center of open space.
+-> Use plus and minus buttons to scroll through attributes.
+-> Use texture atlases?
+-> Render attributes on the GPU?
+
+Loop Design:
+-> Get input.
+-> Update objects.
+-> Render.
+-> Repeat.

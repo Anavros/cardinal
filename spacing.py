@@ -9,7 +9,7 @@ CONFIG_SYNTAX = [
 
 
 def create(config_file, width, height):
-    gui = Window(width, height)
+    gui = Layout(width, height)
     for args in malt.load(config_file, CONFIG_SYNTAX):
         if args == 'div':
             gui.insert(Panel(args.handle), args.anchor, args.size)
@@ -20,7 +20,7 @@ def create(config_file, width, height):
 
 
 # TODO: come up with a better name
-class Window(object):
+class Layout(object):
     def __init__(self, w, h):
         self.w = w
         self.h = h
@@ -28,6 +28,13 @@ class Window(object):
         self.required_h = 0
         self.panels = []
         self.offset = {'top':0, 'bottom':0, 'left':0, 'right':0, 'center':0}
+
+    def __getitem__(self, string):
+        """Find and return the panel whose handle matches the given string."""
+        for p in self.panels:
+            if p.handle == string:
+                return p
+        raise KeyError("Panel '{}' does not exist in this layout!".format(string))
 
     def get(self, handle):
         """Returns the first panel found whose handle matches the given string.
@@ -71,6 +78,13 @@ class Panel(object):
         self.w = 0
         self.h = 0
         self.elements = []
+        self.spaces = {}
+
+    def __getitem__(self, request):
+        if type(request) is not tuple:
+            raise TypeError("Panel elements must be accessed as panel[row, col].")
+        return self.spaces[request]
+        
 
     def make_grid(self, cols, rows, goal_w, goal_h, pad):
         # Position all sub-elements within the panel.
@@ -92,6 +106,7 @@ class Panel(object):
                 e.y = self.y + int(pad/2) + int(ext_h/2) + r*div_h + int(pad_h/2)
                 e.h = goal_h if goal_h > 0 else div_h
                 self.elements.append(e)
+                self.spaces[c, r] = e
 
     def at(self, x, y):
         for e in self.elements:

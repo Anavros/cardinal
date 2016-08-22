@@ -13,9 +13,7 @@ import spacing
 def main():
     logical_w = 300
     logical_h = 200
-    scale = 2
-    pixel_w = logical_w*scale
-    pixel_h = logical_h*scale
+    scale = 1
     app.use_app('glfw')
     canvas = app.Canvas(
         title="Birdies",
@@ -23,7 +21,7 @@ def main():
         size=(logical_w, logical_h),
         keys="interactive",
         resizable=False,
-        px_scale=2
+        px_scale=scale
     )
 
     # should enable transparency?
@@ -31,22 +29,32 @@ def main():
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
     program = build_program('vertex.glsl', 'fragment.glsl')
-    blank = np.full((logical_h, logical_w, 4), 255, dtype=np.uint8)
-
-    #elements = interface.build_gui('config.gui', logical_w, logical_h)
-    # v-- this looks fine, the transparency and flipping problems are both gl
-    #io.imsave('rendered_texture.png', render)
-    #texture = gloo.Texture2D(render, format='rgba')
-    #texture = gloo.Texture2D(io.imread('test.png'))
-
     gui = spacing.create('builder.layout', logical_w, logical_h)
+
+    build_layout = spacing.create('builder.layout', logical_w, logical_h)
+    pause_layout = spacing.create('pause.layout', logical_w, logical_h)
+
     render = image.render_as_colors(gui)
-    render = np.flipud(render)
+    render = np.flipud(render) # shader problem
+
+    nine = io.imread('nine.png')
+    render = image.blit(nine, gui['item'][0, 0], render)
+    render = image.blit(nine, gui['item'][0, 1], render)
+    render = image.blit(nine, gui['item'][0, 2], render)
+
+    plus = io.imread('plus.png')
+    render = image.blit(plus, gui['plus'][0, 0], render)
+    render = image.blit(plus, gui['plus'][0, 1], render)
+    render = image.blit(plus, gui['plus'][0, 2], render)
+
+    minus = io.imread('minus.png')
+    render = image.blit(minus, gui['minus'][0, 0], render)
+    render = image.blit(minus, gui['minus'][0, 1], render)
+    render = image.blit(minus, gui['minus'][0, 2], render)
+
     io.imsave('rendered_texture.png', render)
     texture = gloo.Texture2D(render)
-
     program['tex_color'] = texture
-    # not supposed to be negative! 0 -> 1, not -1 -> 1
     program['a_texcoord'] = np.array([
         (0, 0), (0, 1),
         (1, 0), (1, 1)
@@ -55,9 +63,6 @@ def main():
         (-1.0, -1.0), (-1.0, +1.0), (+1.0, -1.0), (+1.0, +1.0)
         #(-0.5, -0.5), (-0.5, +0.5), (+0.5, -0.5), (+0.5, +0.5)
     ]).astype(np.float32)
-    # maybe we just use one vbo quad and redraw it over and over with different
-    # textures in different locations...
-    #program['u_ortho'] = transforms.ortho(-1, 1, -1, 1, -1, 1) # not necessary?
     program['u_scale'] = scale
 
     @canvas.connect
@@ -65,17 +70,11 @@ def main():
         (x, y) = event.pos
         (x, y) = (int(x/scale), int(y/scale))
         print("Click: ", end='')
-        try:
-            panel = gui.at(x, y)
-        except ValueError:
-            print()
-        else:
-            try:
-                element = panel.at(x, y)
-            except ValueError:
-                print("Panel '{}'".format(panel.handle))
-            else:
-                print("Panel '{}', Element '{}'".format(panel.handle, element.handle))
+        panel = gui.at(x, y)
+        if panel.handle in ['plus', 'minus']:
+            nine = image.color_block(32, 32)
+            render = image.blit(nine, gui['item'][0, 0], render)
+            program['tex_color'] = gloo.Texture2D(render)
 
     @canvas.connect
     def on_draw(event):
