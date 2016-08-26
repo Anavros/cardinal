@@ -11,7 +11,7 @@ import spacing
 def main():
     logical_w = 300
     logical_h = 200
-    scale = 4
+    scale = 2
     app.use_app('glfw')
     canvas = Canvas(
         title="Birdies",
@@ -55,6 +55,17 @@ def main():
     # messy, but less messy than other options using vispy
     layout = build_layout
 
+    state = {
+        "bird_color" : 0,
+        "bird_feather" : 0,
+        "bird_shape" : 0,
+    }
+    # mvc type architecture
+    # keep a state object
+    # modify only the state object in event handling
+    # use the layout to help render the state
+    # I guess each section gets its own state object and layout
+
     @canvas.connect
     def on_draw(event):
         gloo.clear((1,1,1,1))
@@ -65,11 +76,39 @@ def main():
     def on_mouse_press(event):
         (panel, element) = which_element(event, layout, scale)
         if element is None: return
+        affect(state, panel.handle, element.col, element.row)
         block = image.color_block(element.w, element.h)
         rerender(render, program, [(element, block)])
 
     canvas.start()
     app.run()
+
+
+def affect(state, handle, col, row):
+    if (handle, row) == ('plus', 0):
+            state['bird_color'] += 1
+            print('incrementing bird color')
+    elif (handle, row) == ('minus', 0):
+            state['bird_color'] -= 1
+            print('decrementing bird color')
+    elif (handle, row) == ('item', 0):
+            print('bird color is {}'.format(state['bird_color']))
+    elif (handle, row) == ('plus', 1):
+            state['bird_feather'] += 1
+            print('incrementing bird_feather')
+    elif (handle, row) == ('minus', 1):
+            state['bird_feather'] -= 1
+            print('decrementing bird_feather')
+    elif (handle, row) == ('item', 1):
+            print('bird_feather is {}'.format(state['bird_feather']))
+    elif (handle, row) == ('plus', 2):
+            state['bird_shape'] += 1
+            print('incrementing bird shape')
+    elif (handle, row) == ('minus', 2):
+            state['bird_shape'] -= 1
+            print('decrementing bird shape')
+    elif (handle, row) == ('item', 2):
+        print('bird shape is {}'.format(state['bird_shape']))
 
 
 def rerender(screen, program, changes):
