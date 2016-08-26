@@ -11,7 +11,7 @@ import spacing
 def main():
     logical_w = 300
     logical_h = 200
-    scale = 1
+    scale = 4
     app.use_app('glfw')
     canvas = Canvas(
         title="Birdies",
@@ -32,7 +32,7 @@ def main():
     build_layout = spacing.create('build.layout', logical_w, logical_h)
     pause_layout = spacing.create('pause.layout', logical_w, logical_h)
     render = image.render_as_colors(gui)
-    render = np.flipud(render) # shader problem
+    #render = np.flipud(render) # shader problem
     io.imsave('images/rendered_texture.png', render)
 
     texture = gloo.Texture2D(render)
@@ -42,7 +42,11 @@ def main():
         (1, 0), (1, 1)
     ]).astype(np.float32)
     program['a_position'] = np.array([
-        (-1.0, -1.0), (-1.0, +1.0), (+1.0, -1.0), (+1.0, +1.0)
+        #(-1.0, -1.0), (-1.0, +1.0),
+        #(+1.0, -1.0), (+1.0, +1.0)
+
+        (-1.0, +1.0), (-1.0, -1.0),
+        (+1.0, +1.0), (+1.0, -1.0)
         #(-0.5, -0.5), (-0.5, +0.5), (+0.5, -0.5), (+0.5, +0.5)
     ]).astype(np.float32)
     program['u_scale'] = scale
@@ -55,21 +59,23 @@ def main():
     def on_draw(event):
         gloo.clear((1,1,1,1))
         program.draw('triangle_strip')
-        print("drawing screen")
+        #print("drawing screen")
 
     @canvas.connect
     def on_mouse_press(event):
         (panel, element) = which_element(event, layout, scale)
         if element is None: return
         block = image.color_block(element.w, element.h)
-        local_render = render # get around scoping problem
-        texture = image.blit(block, element, local_render)
-        texture = gloo.Texture2D(render)
-        program['tex_color'] = texture
-        canvas.update()
+        rerender(render, program, [(element, block)])
 
     canvas.start()
     app.run()
+
+
+def rerender(screen, program, changes):
+    for (ele, tex) in changes:
+        image.blit(tex, ele, screen)
+    program['tex_color'] = gloo.Texture2D(screen)
 
 
 # automatically updates

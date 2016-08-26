@@ -24,8 +24,8 @@ def blit(image, s, texture):
         raise ValueError("Image is not the right size! ({}, {}) vs ({}, {})".format(
             iw, ih, s.w, s.h))
     # off by one?
-    #texture[s.y:s.y+s.h, s.x:s.x+s.h, :] = image
-    texture[s.y+2:s.y+2+s.h, s.x:s.x+s.h, :] = image
+    texture[s.y:s.y+s.h, s.x:s.x+s.h, :] = image
+    #texture[s.y+2:s.y+2+s.h, s.x:s.x+s.h, :] = image
     return texture
 
 

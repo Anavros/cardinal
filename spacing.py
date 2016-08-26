@@ -68,7 +68,7 @@ class Layout(object):
         for p in self.panels:
             if p.x <= x <= p.w+p.x and p.y <= y <= p.h+p.y:
                 return p, p.at(x, y)
-        raise ValueError("Panel not found.")
+        return None
 
     def find_by_nickname(self):
         pass
@@ -118,7 +118,7 @@ class Panel(object):
         for e in self.spaces.values():
             if e.x <= x <= e.w+e.x and e.y <= y <= e.h+e.y:
                 return e
-        raise ValueError("Element not found.")
+        return None
 
 
 class Element(object):
