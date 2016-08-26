@@ -27,3 +27,9 @@ def blit(image, s, texture):
     #texture[s.y:s.y+s.h, s.x:s.x+s.h, :] = image
     texture[s.y+2:s.y+2+s.h, s.x:s.x+s.h, :] = image
     return texture
+
+
+def insert_all(image, panel, texture):
+    for space in panel.spaces.values():
+        texture = blit(image, space, texture)
+    return texture

@@ -20,3 +20,7 @@ div remainder   center      0
 ele plus        1   3   16  16  4
 ele item        1   3   32  32  4
 ele minus       1   3   16  16  4
+
+#hint item 0 0 "bird color"
+#hint item 0 1 "bird feather"
+#hint item 0 2 "bird shape"

@@ -4,9 +4,7 @@
 import numpy as np
 from vispy import app, gloo, io
 from vispy.gloo import gl
-from vispy.util import transforms
 
-#import interface
 import image
 import spacing
 
@@ -15,7 +13,7 @@ def main():
     logical_h = 200
     scale = 1
     app.use_app('glfw')
-    canvas = app.Canvas(
+    canvas = Canvas(
         title="Birdies",
         #size=(pixel_w, pixel_h),
         size=(logical_w, logical_h),
@@ -29,30 +27,14 @@ def main():
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
     program = build_program('vertex.glsl', 'fragment.glsl')
-    gui = spacing.create('builder.layout', logical_w, logical_h)
 
-    build_layout = spacing.create('builder.layout', logical_w, logical_h)
+    gui = spacing.create('build.layout', logical_w, logical_h)
+    build_layout = spacing.create('build.layout', logical_w, logical_h)
     pause_layout = spacing.create('pause.layout', logical_w, logical_h)
-
     render = image.render_as_colors(gui)
     render = np.flipud(render) # shader problem
+    io.imsave('images/rendered_texture.png', render)
 
-    nine = io.imread('nine.png')
-    render = image.blit(nine, gui['item'][0, 0], render)
-    render = image.blit(nine, gui['item'][0, 1], render)
-    render = image.blit(nine, gui['item'][0, 2], render)
-
-    plus = io.imread('plus.png')
-    render = image.blit(plus, gui['plus'][0, 0], render)
-    render = image.blit(plus, gui['plus'][0, 1], render)
-    render = image.blit(plus, gui['plus'][0, 2], render)
-
-    minus = io.imread('minus.png')
-    render = image.blit(minus, gui['minus'][0, 0], render)
-    render = image.blit(minus, gui['minus'][0, 1], render)
-    render = image.blit(minus, gui['minus'][0, 2], render)
-
-    io.imsave('rendered_texture.png', render)
     texture = gloo.Texture2D(render)
     program['tex_color'] = texture
     program['a_texcoord'] = np.array([
@@ -65,36 +47,64 @@ def main():
     ]).astype(np.float32)
     program['u_scale'] = scale
 
-    @canvas.connect
-    def on_mouse_press(event):
-        (x, y) = event.pos
-        (x, y) = (int(x/scale), int(y/scale))
-        print("Click: ", end='')
-        panel = gui.at(x, y)
-        if panel.handle in ['plus', 'minus']:
-            nine = image.color_block(32, 32)
-            render = image.blit(nine, gui['item'][0, 0], render)
-            program['tex_color'] = gloo.Texture2D(render)
+    # included in callback scope
+    # messy, but less messy than other options using vispy
+    layout = build_layout
 
     @canvas.connect
     def on_draw(event):
         gloo.clear((1,1,1,1))
         program.draw('triangle_strip')
+        print("drawing screen")
 
-    canvas.show()
+    @canvas.connect
+    def on_mouse_press(event):
+        (panel, element) = which_element(event, layout, scale)
+        if element is None: return
+        block = image.color_block(element.w, element.h)
+        local_render = render # get around scoping problem
+        texture = image.blit(block, element, local_render)
+        texture = gloo.Texture2D(render)
+        program['tex_color'] = texture
+        canvas.update()
+
+    canvas.start()
     app.run()
 
 
+# automatically updates
+# might do something fancy later, but solid 60fps for now
+class Canvas(app.Canvas):
+    def __init__(self, *args, **kwargs):
+        app.Canvas.__init__(self, *args, **kwargs)
+        self.timer = app.Timer(connect=self.on_timer)
+
+    def on_timer(self, event):
+        self.update()
+
+    def start(self):
+        self.show()
+        self.timer.start()
+
+
+def which_element(event, layout, scale):
+    (x, y) = event.pos
+    (x, y) = int(x/scale), int(y/scale)
+    panel, element = layout.at(x, y)
+    return (panel, element)
+
+
+class GameState(object):
+    def __init__(self):
+        self.layout = ""
+
+
 def build_program(v_path, f_path):
-    # redundant but simple and easy to read
+    """Load shader programs as strings."""
     with open(v_path, 'r') as v_file:
         v_string = v_file.read()
     with open(f_path, 'r') as f_file:
         f_string = f_file.read()
-
-    #print(v_string, f_string)
-    #input()
-
     return gloo.Program(v_string, f_string)
 
 

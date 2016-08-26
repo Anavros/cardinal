@@ -9,7 +9,7 @@ CONFIG_SYNTAX = [
 
 
 def create(config_file, width, height):
-    gui = Layout(width, height)
+    gui = Layout(config_file.split('.')[0], width, height)
     for args in malt.load(config_file, CONFIG_SYNTAX):
         if args == 'div':
             gui.insert(Panel(args.handle), args.anchor, args.size)
@@ -21,7 +21,8 @@ def create(config_file, width, height):
 
 # TODO: come up with a better name
 class Layout(object):
-    def __init__(self, w, h):
+    def __init__(self, handle, w, h):
+        self.handle = handle
         self.w = w
         self.h = h
         self.required_w = 0
@@ -66,8 +67,11 @@ class Layout(object):
         """Return the panel located at (x, y) in logical pixels."""
         for p in self.panels:
             if p.x <= x <= p.w+p.x and p.y <= y <= p.h+p.y:
-                return p
+                return p, p.at(x, y)
         raise ValueError("Panel not found.")
+
+    def find_by_nickname(self):
+        pass
 
 
 class Panel(object):
@@ -105,11 +109,13 @@ class Panel(object):
                 e.w = goal_w if goal_w > 0 else div_w
                 e.y = self.y + int(pad/2) + int(ext_h/2) + r*div_h + int(pad_h/2)
                 e.h = goal_h if goal_h > 0 else div_h
+                e.col = c
+                e.row = r
                 self.elements.append(e)
                 self.spaces[c, r] = e
 
     def at(self, x, y):
-        for e in self.elements:
+        for e in self.spaces.values():
             if e.x <= x <= e.w+e.x and e.y <= y <= e.h+e.y:
                 return e
         raise ValueError("Element not found.")
@@ -118,6 +124,8 @@ class Panel(object):
 class Element(object):
     def __init__(self, handle):
         self.handle = handle
+        self.col = 0
+        self.row = 0
         self.x = 0
         self.y = 0
         self.w = 0
