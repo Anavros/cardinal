@@ -16,6 +16,15 @@ def render_as_colors(gui):
     return blank_tex
 
 
+def imperfect_blit(image, s, anchor, slate):
+    # assume anchor is center
+    ih, iw, iz = image.shape
+    x = s.x + int(s.w/2) - int(iw/2)
+    y = s.y + int(s.h/2) - int(ih/2)
+    slate[y:y+ih, x:x+iw, :3] = image
+    return slate
+
+
 def color_block(h, w):
     color = np.random.randint(256, size=(1, 1, 4))
     color[:, :, 3] = 255

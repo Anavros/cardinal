@@ -4,6 +4,7 @@ from vispy import gloo
 
 import image
 import splitnine
+import text
 
 
 def click(game, panel_name, col, row):
@@ -73,6 +74,14 @@ def render(game, slate, program, texture_cache):
         print("rendering pause state")
         slate = image.fill('images/nine.png', state.layout, slate, 12)
         slate = image.fill_all('images/nine.png', state.layout['menu'], slate, 12)
+
+        font = text.load_font('images/font.png', 18, 18)
+        build_text = text.arrange(font, "build mode")
+        pen_text = text.arrange(font, "pen mode")
+        slate = image.imperfect_blit(
+            build_text, state.layout['menu'][0,0], "center", slate)
+        slate = image.imperfect_blit(
+            pen_text, state.layout['menu'][0,1], "center", slate)
     else:
         raise ValueError("Trying to render unknown state: {}".format(state.handle))
 

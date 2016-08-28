@@ -31,7 +31,7 @@ def arrange(font, string):
 
 
 def dump_test(font):
-    io.imsave("texrender.png", arrange(font, "hello"))
+    io.imsave("texrender.png", arrange(font, "hello, there. I am a long string!"))
 
 
 if __name__ == '__main__':
