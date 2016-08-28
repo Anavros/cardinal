@@ -23,6 +23,8 @@ def create(config_file, width, height):
 class Layout(object):
     def __init__(self, handle, w, h):
         self.handle = handle
+        self.x = 0  # so you can target the whole screen for rendering
+        self.y = 0
         self.w = w
         self.h = h
         self.required_w = 0

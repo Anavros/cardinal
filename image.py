@@ -1,6 +1,9 @@
 
 import random
 import numpy as np
+from vispy import io
+
+import splitnine
 
 
 def render_as_colors(gui):
@@ -54,3 +57,27 @@ def composite(images):
         slate[:, :, 3] = combo_alpha.astype(np.uint8)
         slate[:, :, :3] = combo_color.astype(np.uint8)
     return slate
+
+
+def fill(image_path, panel, slate, stretch=None):
+    if stretch:
+        image = splitnine.stretch(image_path, panel.w, panel.h, stretch)
+    else:
+        image = io.imread(image_path)
+    return blit(image, panel, slate)
+
+
+def fill_all(image_path, panel, slate, stretch=None):
+    (w, h) = panel.element_w, panel.element_h
+    if stretch:
+        image = splitnine.stretch(image_path, w, h, stretch)
+    else:
+        image = io.imread(image_path)
+    for element in panel.spaces.values():
+        slate = blit(image, element, slate)
+    return slate
+
+
+def matching_sizes(image, target_w, target_h):
+    (image_h, image_w, _) = image.shape
+    return (target_w == image_w or target_h == image_h)

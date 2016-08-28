@@ -41,6 +41,7 @@ def render(game, slate, program, texture_cache):
     if game.needs_redraw:
         slate = image.render_as_colors(state.layout)
         game.needs_redraw = False
+
     if state.handle == 'build':
         print("rendering build state")
         bird_image = image.composite([
@@ -53,20 +54,24 @@ def render(game, slate, program, texture_cache):
             texture_cache['eye'][state.eye],
             texture_cache['flower'][state.flower],
         ])
+        # backgrounds
+        slate = image.fill('images/button.png', state.layout['remainder'], slate, 2)
+        slate = image.fill('images/nine.png', state.layout['menu'][0,0], slate, 12)
+        slate = image.fill('images/nine.png', state.layout['cycle'], slate, 12)
+        # buttons
+        slate = image.fill_all('images/button.png', state.layout['cycle'], slate, 2)
+        # bird image
         bird_image = np.repeat(np.repeat(bird_image, 2, axis=0), 2, axis=1)
         slate = image.blit(bird_image, state.layout['remainder'][0,0], slate)
-        for p in state.layout.panels:
-            if p.handle == 'remainder': continue
-            tex = splitnine.stretch('images/nine.png', p.element_w, p.element_h, 12)
-            slate = image.insert_all(tex, p, slate)
+
     elif state.handle == 'pen':
         print("rendering pen state")
+        slate = image.fill('images/nine.png', state.layout['menu'][0,0], slate, 12)
+
     elif state.handle == 'pause':
         print("rendering pause state")
-        (w, h) = state.layout.element_size('menu')
-        buttex = splitnine.stretch('images/nine.png', w, h, 12)
-        slate = image.insert_all(buttex, state.layout['menu'], slate)
-        #slate = image.blit(buttex, state.layout['menu'][0, 0], slate)
+        slate = image.fill('images/nine.png', state.layout, slate, 12)
+        slate = image.fill_all('images/nine.png', state.layout['menu'], slate, 12)
     else:
         raise ValueError("Trying to render unknown state: {}".format(state.handle))
 
