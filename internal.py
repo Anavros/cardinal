@@ -1,7 +1,9 @@
 
 import numpy as np
 from vispy import gloo
+
 import image
+import splitnine
 
 
 def click(game, panel_name, col, row):
@@ -40,6 +42,7 @@ def render(game, slate, program, texture_cache):
         slate = image.render_as_colors(state.layout)
         game.needs_redraw = False
     if state.handle == 'build':
+        print("rendering build state")
         bird_image = image.composite([
             texture_cache['legs'][state.legs],
             texture_cache['BODY'][0],
@@ -51,13 +54,21 @@ def render(game, slate, program, texture_cache):
             texture_cache['flower'][state.flower],
         ])
         bird_image = np.repeat(np.repeat(bird_image, 2, axis=0), 2, axis=1)
-        new_slate = image.blit(bird_image, state.layout['remainder'][0,0], slate)
+        slate = image.blit(bird_image, state.layout['remainder'][0,0], slate)
+        for p in state.layout.panels:
+            if p.handle == 'remainder': continue
+            tex = splitnine.stretch('images/nine.png', p.element_w, p.element_h, 12)
+            slate = image.insert_all(tex, p, slate)
     elif state.handle == 'pen':
-        new_slate = slate
+        print("rendering pen state")
     elif state.handle == 'pause':
-        new_slate = slate
+        print("rendering pause state")
+        (w, h) = state.layout.element_size('menu')
+        buttex = splitnine.stretch('images/nine.png', w, h, 12)
+        slate = image.insert_all(buttex, state.layout['menu'], slate)
+        #slate = image.blit(buttex, state.layout['menu'][0, 0], slate)
     else:
         raise ValueError("Trying to render unknown state: {}".format(state.handle))
 
-    program['tex_color'] = gloo.Texture2D(new_slate)
-    return new_slate
+    program['tex_color'] = gloo.Texture2D(slate)
+    return slate

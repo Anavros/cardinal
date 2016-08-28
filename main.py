@@ -13,7 +13,7 @@ import internal
 def main():
     logical_w = 300
     logical_h = 200
-    scale = 4
+    scale = 2
     app.use_app('glfw')
     canvas = Canvas(
         title="Birdies",
@@ -62,10 +62,9 @@ def main():
         'pause',
         spacing.create('pause.layout', logical_w, logical_h)
     ))
-    game.use('pause')
-    state = game.get_state()
-    screen = internal.render(
-        game, image.render_as_colors(state.layout), program, bird_parts)
+    game.use('pen')
+    game.slate = internal.render(
+        game, image.render_as_colors(game.get_state().layout), program, bird_parts)
 
     @canvas.connect
     def on_draw(event):
@@ -76,7 +75,9 @@ def main():
     def on_mouse_press(event):
         state = game.get_state()
         print("clicking in {} state".format(state.handle))
-        tup = which_element(event, state.layout, scale)
+        (x, y) = event.pos
+        (x, y) = int(x/scale), int(y/scale)
+        tup = state.layout.at(x, y)
         if tup is None:
             print("Nothing there!")
             return
@@ -85,7 +86,7 @@ def main():
             print("No element there.")
             return
         internal.click(game, panel.handle, element.col, element.row)
-        internal.render(game, screen, program, bird_parts)
+        game.slate = internal.render(game, game.slate, program, bird_parts)
 
     canvas.start()
     app.run()
@@ -104,6 +105,7 @@ class Game(object):
         self.states = {}
         self.current_state = None
         self.needs_redraw = False
+        self.slate = None
 
     def add_state(self, handle, state):
         self.states[handle] = state
@@ -149,13 +151,6 @@ class Canvas(app.Canvas):
     def start(self):
         self.show()
         self.timer.start()
-
-
-def which_element(event, layout, scale):
-    (x, y) = event.pos
-    (x, y) = int(x/scale), int(y/scale)
-    panel, element = layout.at(x, y)
-    return (panel, element)
 
 
 def build_program(v_path, f_path):

@@ -46,6 +46,10 @@ class Layout(object):
                 return p
         raise ValueError("Panel '{}' does not exist!".format(handle))
 
+    def element_size(self, panel_name):
+        panel = self[panel_name]
+        return (panel.element_w, panel.element_h)
+
     def insert(self, p, anchor, size):
         if self.offset['center']:
             raise ValueError("The window is already full!")
@@ -83,6 +87,8 @@ class Panel(object):
         self.h = 0
         self.elements = []
         self.spaces = {}
+        self.element_w = 0
+        self.element_h = 0
 
     def __getitem__(self, request):
         if type(request) is not tuple:
@@ -102,6 +108,8 @@ class Panel(object):
         ext_h = internal_h - div_h*rows
         pad_w = div_w - goal_w if goal_w > 0 else 0
         pad_h = div_h - goal_h if goal_h > 0 else 0
+        self.element_w = goal_w if goal_w > 0 else div_w
+        self.element_h = goal_h if goal_h > 0 else div_h
         for c in range(cols):
             for r in range(rows):
                 e = Element("{}[{}][{}]".format(self.handle, c, r))

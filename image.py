@@ -4,6 +4,7 @@ import numpy as np
 
 
 def render_as_colors(gui):
+    print("rendering colors")
     blank_tex = np.zeros((gui.h, gui.w, 4), dtype=np.uint8)
     for p in gui.panels:
         blank_tex[p.y:p.h+p.y, p.x:p.x+p.w, :] = color_block(p.h, p.w)
@@ -23,9 +24,7 @@ def blit(image, s, texture):
     if ih != s.h or iw != s.w:
         raise ValueError("Image is not the right size! ({}, {}) vs ({}, {})".format(
             iw, ih, s.w, s.h))
-    # off by one?
-    texture[s.y:s.y+s.h, s.x:s.x+s.h, :] = image
-    #texture[s.y+2:s.y+2+s.h, s.x:s.x+s.h, :] = image
+    texture[s.y:s.y+s.h, s.x:s.x+s.w, :] = image
     return texture
 
 
