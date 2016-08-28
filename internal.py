@@ -36,6 +36,7 @@ def click(game, panel_name, col, row):
             elif row == 1:
                 game.use("pen")
 
+
 def render(game, slate, program, texture_cache):
     state = game.get_state()
     if game.needs_redraw:
