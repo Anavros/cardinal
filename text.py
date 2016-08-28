@@ -17,7 +17,7 @@ def load_font(path, tile_w, tile_h):
     for r in range(rows):
         for c in range(cols):
             n = chr(c+r*cols)
-            print("adding {}, {} as '{}', number {}".format(r, c, n, c+c*r))
+            #print("adding {}, {} as '{}', number {}".format(r, c, n, c+c*r))
             font[n] = image[r*tile_h:r*tile_h+tile_h, c*tile_w:c*tile_w+tile_w, :]
     #print(font.keys())
     return font

@@ -1,6 +1,6 @@
 
 ### name        anchor      px_size
-div menu        center      80
+div menu        top         20
 
 ### name        col row wdt hgt pad
-ele menu        1   3   0   40   20
+ele menu        1   1   0   0   0

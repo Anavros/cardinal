@@ -62,7 +62,11 @@ def main():
         'pause',
         spacing.create('pause.layout', logical_w, logical_h)
     ))
-    game.use('pen')
+    game.add_state('map', GameState(
+        'map',
+        spacing.create('map.layout', logical_w, logical_h)
+    ))
+    game.use('pause')
     game.slate = internal.render(
         game, image.render_as_colors(game.get_state().layout), program, bird_parts)
 

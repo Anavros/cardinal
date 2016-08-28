@@ -9,6 +9,8 @@ import text
 
 def click(game, panel_name, col, row):
     state = game.get_state()
+    
+    # Bird Builder
     if state.handle == 'build':
         if panel_name == 'cycle':
             if row == 0:
@@ -27,15 +29,26 @@ def click(game, panel_name, col, row):
                 state.flower = (state.flower+1) % state.n['flower']
         elif panel_name == 'menu':
             game.use("pause")
+
+    # Birdie Pen
     elif state.handle == 'pen':
         if panel_name == 'menu':
             game.use("pause")
+    
+    # Tile Rendering Demo
+    elif state.handle == 'map':
+        if panel_name == 'menu':
+            game.use("pause")
+
+    # Pause Menu
     elif state.handle == 'pause':
         if panel_name == 'menu':
             if row == 0:
                 game.use("build")
             elif row == 1:
                 game.use("pen")
+            elif row == 2:
+                game.use("map")
 
 
 def render(game, slate, program, texture_cache):
@@ -44,6 +57,7 @@ def render(game, slate, program, texture_cache):
         slate = image.render_as_colors(state.layout)
         game.needs_redraw = False
 
+    # Bird Builder
     if state.handle == 'build':
         print("rendering build state")
         bird_image = image.composite([
@@ -66,22 +80,28 @@ def render(game, slate, program, texture_cache):
         bird_image = np.repeat(np.repeat(bird_image, 2, axis=0), 2, axis=1)
         slate = image.blit(bird_image, state.layout['remainder'][0,0], slate)
 
+    # Birdie Pen
     elif state.handle == 'pen':
         print("rendering pen state")
         slate = image.fill('images/nine.png', state.layout['menu'][0,0], slate, 12)
 
+    elif state.handle == 'map':
+        print("rendering map state")
+        slate = image.fill('images/nine.png', state.layout, slate, 12)
+        slate = image.fill('images/nine.png', state.layout['menu'][0,0], slate, 12)
+
+    # Pause Menu
     elif state.handle == 'pause':
         print("rendering pause state")
-        slate = image.fill('images/nine.png', state.layout, slate, 12)
+        slate = image.fill('images/button.png', state.layout, slate, 2)
         slate = image.fill_all('images/nine.png', state.layout['menu'], slate, 12)
 
         font = text.load_font('images/font.png', 18, 18)
-        build_text = text.arrange(font, "build mode")
-        pen_text = text.arrange(font, "pen mode")
-        slate = image.imperfect_blit(
-            build_text, state.layout['menu'][0,0], "center", slate)
-        slate = image.imperfect_blit(
-            pen_text, state.layout['menu'][0,1], "center", slate)
+        label_strings = ['build mode', 'pen mode', 'map mode']
+        for i, s in enumerate(label_strings):
+            string_tex = text.arrange(font, s)
+            slate = image.imperfect_blit(
+                string_tex, state.layout['menu'][0, i], "center", slate)
     else:
         raise ValueError("Trying to render unknown state: {}".format(state.handle))
 
