@@ -8,6 +8,7 @@ import os
 
 import image
 import spacing
+import game
 
 def main():
     logical_w = 300
@@ -38,9 +39,11 @@ def main():
 
     # included in callback scope
     # messy, but less messy than other options using vispy
+    bird_parts, part_counts = _cache_bird_parts()
     build_state = GameState(
         'build',
         spacing.create('build.layout', logical_w, logical_h),
+        n=part_counts,
         legs=0,
         beak=0,
         tummy=0,
@@ -49,28 +52,26 @@ def main():
         eye=0,
         flower=0
     )
-    state = build_state
-    # mvc type architecture
-    # keep a state object
-    # modify only the state object in event handling
-    # use the layout to help render the state
-    # I guess each section gets its own state object and layout
-    screen = render(state, program)
+    pen_state = GameState(
+        'pen',
+        spacing.create('pen.layout', logical_w, logical_h),
+        birds=0
+    )
+    state = pen_state
+    screen = game.render(
+        state, image.render_as_colors(state.layout), program, bird_parts)
 
     @canvas.connect
     def on_draw(event):
         gloo.clear((1,1,1,1))
         program.draw('triangle_strip')
-        #print("drawing screen")
 
     @canvas.connect
     def on_mouse_press(event):
         (panel, element) = which_element(event, state.layout, scale)
         if element is None: return
-        affect(state, panel.handle, element.col, element.row)
-        #block = image.color_block(element.w, element.h)
-        #rerender(screen, program, [(element, block)])
-        render_build_mode(state, program, screen)
+        game.click(state, panel.handle, element.col, element.row)
+        game.render(state, screen, program, bird_parts)
 
     canvas.start()
     app.run()
@@ -83,60 +84,6 @@ class GameState(object):
         for (k, v) in kwargs.items():
             self.__dict__[k] = v
 
-
-def affect(state, handle, col, row):
-    global _bird_part_cache
-    if not _bird_part_cache:
-        _bird_part_cache = _cache_bird_parts()
-    n = {k:len(v) for k, v in _bird_part_cache.items()}
-    if handle != 'cycle': return
-    if row == 0:
-        state.legs = (state.legs+1) % n['legs']
-    elif row == 1:
-        state.beak = (state.beak+1) % n['beak']
-    elif row == 2:
-        state.tummy = (state.tummy+1) % n['tummy']
-    elif row == 3:
-        state.tail = (state.tail+1) % n['tail']
-    elif row == 4:
-        state.wing = (state.wing+1) % n['wing']
-    elif row == 5:
-        state.eye = (state.eye+1) % n['eye']
-    elif row == 6:
-        state.flower = (state.flower+1) % n['flower']
-
-
-def rerender(screen, program, changes):
-    for (ele, tex) in changes:
-        image.blit(tex, ele, screen)
-    program['tex_color'] = gloo.Texture2D(screen)
-    return screen
-
-
-def render(state, program):
-    screen = image.render_as_colors(state.layout)
-    program['tex_color'] = gloo.Texture2D(screen)
-    return screen
-
-
-_bird_part_cache = {}
-def render_build_mode(state, program, screen):
-    global _bird_part_cache
-    if not _bird_part_cache:
-        _bird_part_cache = _cache_bird_parts()
-    bird_image = image.composite([
-        _bird_part_cache['legs'][state.legs],
-        _bird_part_cache['BODY'][0],
-        _bird_part_cache['beak'][state.beak],
-        _bird_part_cache['tummy'][state.tummy],
-        _bird_part_cache['tail'][state.tail],
-        _bird_part_cache['wing'][state.wing],
-        _bird_part_cache['eye'][state.eye],
-        _bird_part_cache['flower'][state.flower],
-    ])
-    bird_image = np.repeat(np.repeat(bird_image, 2, axis=0), 2, axis=1)
-    new_screen = image.blit(bird_image, state.layout['remainder'][0,0], screen)
-    program['tex_color'] = gloo.Texture2D(new_screen)
 
 def _cache_bird_parts():
     cache = {
@@ -154,7 +101,8 @@ def _cache_bird_parts():
         if part_type not in cache.keys():
             print("Unknown part type:", part_type)
         cache[part_type].append(io.imread("assets/"+path))
-    return cache
+    ns = {k:len(v) for k, v in cache.items()}
+    return cache, ns
 
 # automatically updates
 # might do something fancy later, but solid 60fps for now
