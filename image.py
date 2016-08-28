@@ -33,3 +33,25 @@ def insert_all(image, panel, texture):
     for space in panel.spaces.values():
         texture = blit(image, space, texture)
     return texture
+
+
+def composite(images):
+    (ih, iw, iz) = images[0].shape
+    slate = np.zeros((ih, iw, iz), dtype=images[0].dtype)
+    for image in images:
+        assert image.shape == images[0].shape
+        slate_color = slate[:, :, :3].astype(np.float32) / 255.0
+        slate_alpha = slate[:, :, 3].astype(np.float32) / 255.0
+        image_color = image[:, :, :3].astype(np.float32) / 255.0
+        image_alpha = image[:, :, 3].astype(np.float32) / 255.0
+
+        combo_alpha = image_alpha + slate_alpha*(1.0-image_alpha)
+        combo_color = (image_color*image_alpha[:,:,None] + 
+            slate_color*slate_alpha[:,:,None] *
+            (1.0-image_alpha[:,:,None])) / combo_alpha[:,:,None]
+
+        combo_alpha = combo_alpha*255
+        combo_color = combo_color*255
+        slate[:, :, 3] = combo_alpha.astype(np.uint8)
+        slate[:, :, :3] = combo_color.astype(np.uint8)
+    return slate

@@ -3,23 +3,18 @@
 #? ele handle int(cols) int(rows) int(w) int(h) int(pad)
 
 ### name        anchor      px_size
-#div left_bar    left        40
-#div menu        bottom      80
-#div test        left        150
-#div rest        center      80
-div plus        right       24
-div item        right       40
-div minus       right       24
+#div plus        right       24
+#div item        right       40
+#div minus       right       24
+div cycle       right       40
 div remainder   center      0
 
 ### name        col row wdt hgt pad
-#ele menu        3   1   0   30  10
-#ele left_bar    1   8   0   10  10
-#ele test        2   1   0   0   10
-#ele rest        4   4   0   0   10
-ele plus        1   3   16  16  4
-ele item        1   3   32  32  4
-ele minus       1   3   16  16  4
+#ele plus        1   3   16  16  4
+#ele item        1   3   32  32  4
+#ele minus       1   3   16  16  4
+ele cycle       1   7   0   16  4
+ele remainder   1   1   128 128 0
 
 #hint item 0 0 "bird color"
 #hint item 0 1 "bird feather"
