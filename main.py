@@ -8,7 +8,7 @@ import os
 
 import image
 import spacing
-import game
+import internal
 
 def main():
     logical_w = 300
@@ -40,7 +40,8 @@ def main():
     # included in callback scope
     # messy, but less messy than other options using vispy
     bird_parts, part_counts = _cache_bird_parts()
-    build_state = GameState(
+    game = Game()
+    game.add_state('build', GameState(
         'build',
         spacing.create('build.layout', logical_w, logical_h),
         n=part_counts,
@@ -51,15 +52,20 @@ def main():
         wing=0,
         eye=0,
         flower=0
-    )
-    pen_state = GameState(
+    ))
+    game.add_state('pen', GameState(
         'pen',
         spacing.create('pen.layout', logical_w, logical_h),
         birds=0
-    )
-    state = pen_state
-    screen = game.render(
-        state, image.render_as_colors(state.layout), program, bird_parts)
+    ))
+    game.add_state('pause', GameState(
+        'pause',
+        spacing.create('pause.layout', logical_w, logical_h)
+    ))
+    game.use('pause')
+    state = game.get_state()
+    screen = internal.render(
+        game, image.render_as_colors(state.layout), program, bird_parts)
 
     @canvas.connect
     def on_draw(event):
@@ -68,10 +74,18 @@ def main():
 
     @canvas.connect
     def on_mouse_press(event):
-        (panel, element) = which_element(event, state.layout, scale)
-        if element is None: return
-        game.click(state, panel.handle, element.col, element.row)
-        game.render(state, screen, program, bird_parts)
+        state = game.get_state()
+        print("clicking in {} state".format(state.handle))
+        tup = which_element(event, state.layout, scale)
+        if tup is None:
+            print("Nothing there!")
+            return
+        (panel, element) = tup
+        if element is None:
+            print("No element there.")
+            return
+        internal.click(game, panel.handle, element.col, element.row)
+        internal.render(game, screen, program, bird_parts)
 
     canvas.start()
     app.run()
@@ -83,6 +97,24 @@ class GameState(object):
         self.layout = layout
         for (k, v) in kwargs.items():
             self.__dict__[k] = v
+
+
+class Game(object):
+    def __init__(self):
+        self.states = {}
+        self.current_state = None
+        self.needs_redraw = False
+
+    def add_state(self, handle, state):
+        self.states[handle] = state
+
+    def use(self, handle):
+        self.current_state = self.states[handle]
+        self.needs_redraw = True
+        print("entering {} state".format(handle))
+
+    def get_state(self):
+        return self.current_state
 
 
 def _cache_bird_parts():
