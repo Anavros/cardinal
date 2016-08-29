@@ -9,8 +9,8 @@ import random
 from objects import AutoCanvas
 
 W, H, Z = 200, 200, 4
-COLS, ROWS = 32, 16
-SIZE, FLAT = 0.2, 1
+COLS, ROWS = 8, 8
+SIZE, FLAT = 1, 1
 
 def main():
     app.use_app('glfw')
@@ -23,7 +23,8 @@ def main():
 
     dirt_texture = gloo.Texture2D(io.imread('images/dirt.png'))
     grav_texture = gloo.Texture2D(io.imread('images/gravel.png'))
-    hex_vertex = gloo.VertexBuffer(gen_single(SIZE, FLAT))
+    farm_texture = gloo.Texture2D(io.imread('images/farmland_dry.png'))
+    hex_vertex = gloo.VertexBuffer(gen_single(SIZE))
     hex_index = gloo.IndexBuffer(gen_index())
     hex_texcoords = gen_texcoords()
 
@@ -33,12 +34,6 @@ def main():
     program['a_position'] = hex_vertex
     program['a_texcoord'] = hex_texcoords
     program['u_texture'] = dirt_texture
-    program['u_offset'] = (0, 0)
-    program['u_overlay'] = 0.0
-
-    cam = [0, 0, 1]  # mutable
-    hover = [0, 0]
-    program['u_camera'] = cam
 
     # 3D Matrices
     mats = CheatyStorage(
@@ -61,21 +56,22 @@ def main():
         gloo.clear(color=True, depth=True)
         for c in range(COLS):
             for r in range(ROWS):
-                if hexmap[r, c] == 0:
+                z = hexmap[r, c]
+                if z == 0:
+                    program['u_texture'] = farm_texture
+                elif z == 1:
                     program['u_texture'] = dirt_texture
-                else:
+                elif z == 2:
                     program['u_texture'] = grav_texture
-                x, y = (c*(3*SIZE/4), r*SIZE/FLAT + (SIZE/2/FLAT if (c%2==0) else 0))
-                z = heightmap[r, c]
+                x, y = (c*(3*SIZE/4), r*SIZE + (SIZE/2 if (c%2==0) else 0))
 
-                #program['u_offset'] = (x, y)
-                mats.model = transforms.translate((x, y, -2-z/10))
+                ver, tex, ind = gen(SIZE, z/2)
+                program['a_position'] = gloo.VertexBuffer(ver)
+                program['a_texcoord'] = tex
+
+                mats.model = transforms.translate((x, y, -2))
                 program['m_model'] = mats.model
-#                if [c, r] == hover:
-#                    program['u_overlay'] = 0.1
-#                else:
-#                    program['u_overlay'] = 0.0
-                program.draw('triangles', hex_index)
+                program.draw('triangles', gloo.IndexBuffer(ind))
 
     @canvas.connect
     def on_mouse_move(event):
@@ -100,18 +96,10 @@ def main():
             mats.view = np.dot(mats.view, transforms.rotate(-wx*25, [0,1,0]))
             mats.view = np.dot(mats.view, transforms.translate((-wx*1, wy*1, 0)))
             program['m_view'] = mats.view
-        elif event.buttons == []:
-            x, y = event.pos
-            c, r = screen_to_index(x, y, cam)
-            hover[0] = c
-            hover[1] = r
         elif event.buttons == [1]:
             (nx, ny) = event.pos
             (ox, oy) = event.last_event.pos
             (dx, dy) = (nx-ox, ny-oy)
-            #cam[0] += dx/W/Z*2/cam[2]
-            #cam[1] += -dy/H/Z*2/cam[2]
-            #program['u_camera'] = cam
             wx = dx*10/W/Z
             wy = dy*10/H/Z
             mats.view = np.dot(mats.view, transforms.translate((wx, -wy, 0)))
@@ -167,23 +155,88 @@ def touch(hexmap, c, r):
 
 
 def gen_map(cols, rows):
-    hexmap = np.random.randint(2, size=(rows, cols), dtype=np.uint32)
+    hexmap = np.random.randint(3, size=(rows, cols), dtype=np.uint32)
     heightmap = np.random.randint(2, size=(rows, cols), dtype=np.uint32)
     return hexmap, heightmap
 
 
-def gen_single(size, flat=1):
+def gen(size, height):
+    half = size/2
+    quar = size/4
+    x, y = 0, 0
+    vertices = np.array([
+        (x, y, height),
+        (x-quar, y+half, height),   # tl
+        (x+quar, y+half, height),   # tr
+        (x+half, y, height),        # re
+        (x+quar, y-half, height),   # br
+        (x-quar, y-half, height),   # bl
+        (x-half, y, height),        # le
+        (x, y, 0),
+        (x-quar, y+half, 0),   # tl
+        (x+quar, y+half, 0),   # tr
+        (x+half, y, 0),        # re
+        (x+quar, y-half, 0),   # br
+        (x-quar, y-half, 0),   # bl
+        (x-half, y, 0),        # le
+    ], dtype=np.float32)
+    texcoords = np.array([
+        (0.5, 0.5),   # 00 0
+        (0.25, 1.0),  # tl 1
+        (0.75, 1.0),  # tr 2
+        (1.0, 0.5),   # re 3
+        (0.75, 0.0),  # br 4
+        (0.25, 0.0),  # bl 5
+        (0.0, 0.5),   # le 6
+        (0.5, 0.5),   # 00 7
+        (0.25, 1.0),  # tl 8
+        (0.75, 1.0),  # tr 9
+        (1.0, 0.5),   # re 10
+        (0.75, 0.0),  # br 11
+        (0.25, 0.0),  # bl 12
+        (0.0, 0.5),   # le 13
+    ], dtype=np.float32)
+    indices = np.array([
+        0, 1, 2,
+        0, 2, 3,
+        0, 3, 4,
+        0, 4, 5,
+        0, 5, 6,
+        0, 6, 1,
+        7, 8, 9,
+        7, 9, 10,
+        7, 10, 11,
+        7, 11, 12,
+        7, 12, 13,
+        7, 13, 8,
+        1, 8, 2,
+        9, 8, 2,
+        2, 9, 3,
+        10, 9, 3,
+        3, 10, 4,
+        11, 10, 4,
+        4, 11, 5,
+        12, 11, 5,
+        5, 12, 6,
+        13, 12, 6,
+        6, 13, 1,
+        8, 13, 1,
+    ], dtype=np.uint8)
+    return vertices, texcoords, indices
+
+
+def gen_single(size):
     half = size/2
     quar = size/4
     x, y = 0, 0
     return np.array([
-        (x, y),
-        (x-quar, y+half/flat),   # tl
-        (x+quar, y+half/flat),   # tr
-        (x+half, y/flat),        # re
-        (x+quar, y-half/flat),   # br
-        (x-quar, y-half/flat),   # bl
-        (x-half, y/flat),        # le
+        (x, y, 0),
+        (x-quar, y+half, 0),   # tl
+        (x+quar, y+half, 0),   # tr
+        (x+half, y, 0),        # re
+        (x+quar, y-half, 0),   # br
+        (x-quar, y-half, 0),   # bl
+        (x-half, y, 0),        # le
     ]).astype(np.float32)
 
 
@@ -219,16 +272,14 @@ class CheatyStorage(object):
 VERTEX = r"""
 #version 120
 
-attribute vec2 a_position;
+attribute vec3 a_position;
 attribute vec2 a_texcoord;
 uniform mat4 m_model;
 uniform mat4 m_view;
 uniform mat4 m_perspective;
 
-uniform float u_overlay;
-
 void main(void) {
-    gl_Position = m_perspective * m_view * m_model * vec4(a_position, 0.0, 1.0);
+    gl_Position = m_perspective * m_view * m_model * vec4(a_position, 1.0);
     gl_TexCoord[0] = vec4(a_texcoord, 0.0, 0.0);
 }
 """
@@ -236,10 +287,9 @@ FRAGMENT = r"""
 #version 120
 
 uniform sampler2D u_texture;
-uniform float u_overlay;
 
 void main(void) {
-    gl_FragColor = texture2D(u_texture, gl_TexCoord[0].st) + vec4(u_overlay);
+    gl_FragColor = texture2D(u_texture, gl_TexCoord[0].st);
 }
 """
 
