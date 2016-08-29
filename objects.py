@@ -25,11 +25,13 @@ class GameState(object):
 
 
 class Game(object):
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.states = {}
         self.current_state = None
         self.needs_redraw = False
         self.slate = None
+        for (k, v) in kwargs.items():
+            self.__dict__[k] = v
 
     def add_state(self, handle, state):
         self.states[handle] = state

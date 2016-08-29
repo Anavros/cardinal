@@ -10,6 +10,7 @@ import image
 import spacing
 import internal
 from objects import AutoCanvas, Game, GameState
+from birdie import Birdie
 
 def main():
     logical_w = 300
@@ -41,7 +42,11 @@ def main():
     # included in callback scope
     # messy, but less messy than other options using vispy
     bird_parts, part_counts = _cache_bird_parts()
-    game = Game()
+    game = Game(
+        parts = bird_parts,
+        n_parts = part_counts,
+        selected_bird = (0, 0),
+    )
     game.add_state('build', GameState(
         'build',
         spacing.create('build.layout', logical_w, logical_h),
@@ -57,7 +62,10 @@ def main():
     game.add_state('pen', GameState(
         'pen',
         spacing.create('pen.layout', logical_w, logical_h),
-        birds=0
+        birds=[
+            [Birdie(), Birdie()],
+            [Birdie(), Birdie()],
+        ],
     ))
     game.add_state('pause', GameState(
         'pause',

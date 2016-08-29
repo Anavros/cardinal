@@ -1,6 +1,8 @@
 
 ### name        anchor      px_size
 div menu        top         20
+div selection   center      0
 
 ### name        col row wdt hgt pad
 ele menu        1   1   0   0   0
+ele selection   2   2   64  64  8
