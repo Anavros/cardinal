@@ -7,12 +7,12 @@ import random
 
 from objects import AutoCanvas
 
+W, H, Z = 200, 200, 2
+COLS, ROWS = 4, 4
+SIZE, FLAT = 0.2, 1
 
 def main():
     app.use_app('glfw')
-    W, H, Z = 200, 200, 4
-    SIZE, COLS, ROWS = 0.2, 16, 16
-    FLAT = 2
     canvas = AutoCanvas(
         title="Hexes", size=(W, H), keys="interactive", px_scale=Z)
     program = gloo.Program(VERTEX, FRAGMENT)
@@ -24,6 +24,7 @@ def main():
     hex_texcoords = gen_texcoords()
 
     hexmap = gen_map(COLS, ROWS)
+    #io.imsave('hexmap.png', hexmap)
 
     program['a_position'] = hex_vertex
     program['a_texcoord'] = hex_texcoords
@@ -36,6 +37,7 @@ def main():
 
     @canvas.connect
     def on_draw(event):
+        global printed
         gloo.clear((1,1,1,1))
         for c in range(COLS):
             for r in range(ROWS):
@@ -43,7 +45,8 @@ def main():
                     program['u_texture'] = dirt_texture
                 else:
                     program['u_texture'] = grav_texture
-                program['u_offset'] = c*(3*SIZE/4), r*SIZE/FLAT + (SIZE/2/FLAT if c%2 else 0)
+                x, y = (c*(3*SIZE/4), r*SIZE/FLAT + (SIZE/2/FLAT if (c%2==0) else 0))
+                program['u_offset'] = (x, y)
                 program.draw('triangles', hex_index)
 
     @canvas.connect
@@ -62,12 +65,41 @@ def main():
         cam[2] += event.delta[1]/10
         program['u_camera'] = cam
 
+    @canvas.connect
+    def on_mouse_release(event):
+        if len(event.trail()) <= 1:
+            x, y = event.pos
+            x, y = screen_to_world(x, y, cam)
+            c, r = world_to_index(x, y)
+            print("x:{:.2f} y:{:.2f}".format(x, y))
+            #touch(hexmap, c, r)
+
     canvas.start()
     app.run()
 
 
+# TODO: integrate camera transformations
+def world_to_index(x, y):
+    c = int(round(x/(0.75*SIZE)))
+    r = int(round((y-SIZE/2)/SIZE if c%2==0 else y/SIZE))
+    #print("even" if c%2==0 else "odd")
+    return c, r
+
+
+def screen_to_world(x, y, camera):
+    a, b, c = camera
+    q = ((((x)/Z/W)*2)-1)/c - a
+    r = ((((y)/Z/H)*2)-1)/c + b
+    return q, -r
+
+
+def touch(hexmap, c, r):
+    hexmap[c, r] = 1 if hexmap[c, r] != 1 else 0
+    return hexmap
+
+
 def gen_map(cols, rows):
-    return np.random.randint(2, size=(rows, cols))
+    return np.random.randint(2, size=(rows, cols)).astype(np.uint32)
 
 
 def gen_single(size, flat=1):
