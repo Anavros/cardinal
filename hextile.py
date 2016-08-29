@@ -9,7 +9,7 @@ import random
 from objects import AutoCanvas
 
 W, H, Z = 200, 200, 4
-COLS, ROWS = 10, 10
+COLS, ROWS = 32, 16
 SIZE, FLAT = 0.2, 1
 
 def main():
@@ -45,29 +45,31 @@ def main():
         model=np.eye(4, dtype=np.float32),
         view=np.eye(4, dtype=np.float32),
         #perspective=transforms.ortho(0, 1, 0, 1, 0, 1),
-        perspective=transforms.perspective(90.0, 1.0, 0.5, 20.0),
+        perspective=transforms.perspective(90.0, 1.0, 1.0, 20.0),
     )
 
-    mats.model = np.dot(mats.model, transforms.translate((0, 0, -10)))
+    mats.model = np.dot(mats.model, transforms.translate((0, 0, -2)))
     program['m_model'] = mats.model
     program['m_view'] = mats.view
     program['m_perspective'] = mats.perspective
 
+    gloo.set_state(clear_color=(1, 1, 1, 1), depth_test=True)
+
     @canvas.connect
     def on_draw(event):
         global printed
-        gloo.clear((1,1,1,1), 0.5)
+        gloo.clear(color=True, depth=True)
         for c in range(COLS):
             for r in range(ROWS):
-                if hexmap[c, r] == 0:
+                if hexmap[r, c] == 0:
                     program['u_texture'] = dirt_texture
                 else:
                     program['u_texture'] = grav_texture
                 x, y = (c*(3*SIZE/4), r*SIZE/FLAT + (SIZE/2/FLAT if (c%2==0) else 0))
-                z = heightmap[c, r]
+                z = heightmap[r, c]
 
                 #program['u_offset'] = (x, y)
-                mats.model = transforms.translate((x, y, -10-z/10))
+                mats.model = transforms.translate((x, y, -2-z/10))
                 program['m_model'] = mats.model
 #                if [c, r] == hover:
 #                    program['u_overlay'] = 0.1
@@ -84,8 +86,8 @@ def main():
             (dx, dy) = (nx-ox, ny-oy)
             wx = dx*10/W/Z
             wy = dy*10/H/Z
-            mats.view = np.dot(mats.view, transforms.rotate(wy, [1,0,0]))
-            mats.view = np.dot(mats.view, transforms.rotate(wx, [0,1,0]))
+            mats.view = np.dot(mats.view, transforms.rotate(wy*10, [1,0,0]))
+            mats.view = np.dot(mats.view, transforms.rotate(wx*10, [0,1,0]))
             program['m_view'] = mats.view
         # Right-Click
         if event.buttons == [2]:
@@ -94,9 +96,9 @@ def main():
             (dx, dy) = (nx-ox, ny-oy)
             wx = dx*10/W/Z
             wy = dy*10/H/Z
-            mats.view = np.dot(mats.view, transforms.rotate(-wy*10, [1,0,0]))
-            mats.view = np.dot(mats.view, transforms.rotate(-wx*10, [0,1,0]))
-            mats.view = np.dot(mats.view, transforms.translate((-wx, wy, 0)))
+            mats.view = np.dot(mats.view, transforms.rotate(wy*25, [1,0,0]))
+            mats.view = np.dot(mats.view, transforms.rotate(-wx*25, [0,1,0]))
+            mats.view = np.dot(mats.view, transforms.translate((-wx*1, wy*1, 0)))
             program['m_view'] = mats.view
         elif event.buttons == []:
             x, y = event.pos
