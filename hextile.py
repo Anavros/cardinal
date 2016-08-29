@@ -3,6 +3,7 @@
 from vispy import gloo, app, io
 from vispy.gloo import gl
 import numpy as np
+import random
 
 from objects import AutoCanvas
 
@@ -10,19 +11,23 @@ from objects import AutoCanvas
 def main():
     app.use_app('glfw')
     W, H, Z = 200, 200, 4
-    SIZE, COLS, ROWS = 0.2, 10, 10
+    SIZE, COLS, ROWS = 0.2, 16, 16
+    FLAT = 2
     canvas = AutoCanvas(
         title="Hexes", size=(W, H), keys="interactive", px_scale=Z)
     program = gloo.Program(VERTEX, FRAGMENT)
 
-    texture = gloo.Texture2D(io.imread('images/dirt.png'))
-    hex_vertex = gloo.VertexBuffer(gen_single(SIZE))
+    dirt_texture = gloo.Texture2D(io.imread('images/dirt.png'))
+    grav_texture = gloo.Texture2D(io.imread('images/gravel.png'))
+    hex_vertex = gloo.VertexBuffer(gen_single(SIZE, FLAT))
     hex_index = gloo.IndexBuffer(gen_index())
     hex_texcoords = gen_texcoords()
 
+    hexmap = gen_map(COLS, ROWS)
+
     program['a_position'] = hex_vertex
     program['a_texcoord'] = hex_texcoords
-    program['u_texture'] = texture
+    program['u_texture'] = dirt_texture
     program['u_offset'] = (0, 0)
 
     cam = [0, 0, 1]  # mutable
@@ -34,7 +39,11 @@ def main():
         gloo.clear((1,1,1,1))
         for c in range(COLS):
             for r in range(ROWS):
-                program['u_offset'] = c*(3*SIZE/4), r*SIZE + (SIZE/2 if c%2 else 0)
+                if hexmap[c, r] == 0:
+                    program['u_texture'] = dirt_texture
+                else:
+                    program['u_texture'] = grav_texture
+                program['u_offset'] = c*(3*SIZE/4), r*SIZE/FLAT + (SIZE/2/FLAT if c%2 else 0)
                 program.draw('triangles', hex_index)
 
     @canvas.connect
@@ -57,58 +66,22 @@ def main():
     app.run()
 
 
-def gen_vertices(size, cols, rows):
-    buf = np.zeros((rows*cols*7),
-        dtype=[("a_position", np.float32, 2), ("a_texcoord", np.float32, 2)])
-    n_ind = 7
-    ind = np.zeros((rows*cols*n_ind), dtype=np.uint32)
-    half = size/2
-    quarter = size/4
-    v = 0
-    i = 0
-    for c in range(cols):
-        for r in range(rows):
-            (x, y) = (c*(3*quarter), r*size + (half if c%2 else 0))
-            buf['a_position'][v] = (x, y)
-            #buf['a_texcoord'][v] = 0
-            buf['a_position'][v+1] = (x-quarter, y+half) # tl
-            #buf['a_texcoord'][v+1] = 0
-            buf['a_position'][v+2] = (x+quarter, y+half) # tr
-            #buf['a_texcoord'][v+2] = 0
-            buf['a_position'][v+3] = (x+half, y) # re
-            #buf['a_texcoord'][v+3] = 0
-            buf['a_position'][v+4] = (x+quarter, y-half) # br
-            #buf['a_texcoord'][v+4] = 0
-            buf['a_position'][v+5] = (x-quarter, y-half) # bl
-            #buf['a_texcoord'][v+5] = 0
-            buf['a_position'][v+6] = (x-half, y) # le
-            #buf['a_texcoord'][v+6] = 0
-
-            ind[i:i+n_ind] = np.array([
-                0, 1, 2,
-                0, 2, 3,
-                0, 3, 4,
-                0, 4, 5,
-                0, 5, 6,
-                0, 6, 1,
-            ]).astype(np.uint32) + v
-            v += 7
-            i += n_ind
-    return buf, ind
+def gen_map(cols, rows):
+    return np.random.randint(2, size=(rows, cols))
 
 
-def gen_single(size):
+def gen_single(size, flat=1):
     half = size/2
     quar = size/4
     x, y = 0, 0
     return np.array([
         (x, y),
-        (x-quar, y+half),   # tl
-        (x+quar, y+half),   # tr
-        (x+half, y),        # re
-        (x+quar, y-half),   # br
-        (x-quar, y-half),   # bl
-        (x-half, y),        # le
+        (x-quar, y+half/flat),   # tl
+        (x+quar, y+half/flat),   # tr
+        (x+half, y/flat),        # re
+        (x+quar, y-half/flat),   # br
+        (x-quar, y-half/flat),   # bl
+        (x-half, y/flat),        # le
     ]).astype(np.float32)
 
 
