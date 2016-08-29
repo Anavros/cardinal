@@ -21,9 +21,9 @@ def main():
         title="Hexes", size=(W, H), keys="interactive", px_scale=Z)
     program = gloo.Program(VERTEX, FRAGMENT)
 
-    dirt_texture = gloo.Texture2D(io.imread('images/dirt.png'))
-    grav_texture = gloo.Texture2D(io.imread('images/gravel.png'))
-    farm_texture = gloo.Texture2D(io.imread('images/farmland_dry.png'))
+    dirt_texture = gloo.Texture2D(io.imread('images/dirt.png'), wrapping='repeat')
+    grav_texture = gloo.Texture2D(io.imread('images/gravel.png'), wrapping='repeat')
+    farm_texture = gloo.Texture2D(io.imread('images/farmland_dry.png'), wrapping='repeat')
     hex_vertex = gloo.VertexBuffer(gen_single(SIZE))
     hex_index = gloo.IndexBuffer(gen_index())
     hex_texcoords = gen_texcoords()
@@ -39,7 +39,6 @@ def main():
     mats = CheatyStorage(
         model=np.eye(4, dtype=np.float32),
         view=np.eye(4, dtype=np.float32),
-        #perspective=transforms.ortho(0, 1, 0, 1, 0, 1),
         perspective=transforms.perspective(90.0, 1.0, 1.0, 20.0),
     )
 
@@ -59,19 +58,25 @@ def main():
                 z = hexmap[r, c]
                 if z == 0:
                     program['u_texture'] = farm_texture
+                    dip = (0, 0, 0)
                 elif z == 1:
                     program['u_texture'] = dirt_texture
+                    dip = (0, 0.5, 0.5)
                 elif z == 2:
                     program['u_texture'] = grav_texture
+                    dip = (0.5, 0.5, 0.5)
                 x, y = (c*(3*SIZE/4), r*SIZE + (SIZE/2 if (c%2==0) else 0))
 
-                ver, tex, ind = gen(SIZE, z/2)
+                ver, tex, tops, sides = gen(SIZE, z/2, dip)
                 program['a_position'] = gloo.VertexBuffer(ver)
                 program['a_texcoord'] = tex
 
                 mats.model = transforms.translate((x, y, -2))
                 program['m_model'] = mats.model
-                program.draw('triangles', gloo.IndexBuffer(ind))
+                program['u_shade'] = 0.0
+                program.draw('triangles', gloo.IndexBuffer(tops))
+                program['u_shade'] = 0.1
+                program.draw('triangles', gloo.IndexBuffer(sides))
 
     @canvas.connect
     def on_mouse_move(event):
@@ -160,25 +165,26 @@ def gen_map(cols, rows):
     return hexmap, heightmap
 
 
-def gen(size, height):
+def gen(size, height, dip=(0, 0, 0)):
+    d_top, d_left, d_right = dip
     half = size/2
     quar = size/4
     x, y = 0, 0
     vertices = np.array([
         (x, y, height),
-        (x-quar, y+half, height),   # tl
-        (x+quar, y+half, height),   # tr
-        (x+half, y, height),        # re
-        (x+quar, y-half, height),   # br
-        (x-quar, y-half, height),   # bl
-        (x-half, y, height),        # le
-        (x, y, 0),
-        (x-quar, y+half, 0),   # tl
-        (x+quar, y+half, 0),   # tr
-        (x+half, y, 0),        # re
-        (x+quar, y-half, 0),   # br
-        (x-quar, y-half, 0),   # bl
-        (x-half, y, 0),        # le
+        (x-quar, y+half, height-d_top),   # tl
+        (x+quar, y+half, height-d_top),   # tr
+        (x+half, y, height-d_right),        # re
+        (x+quar, y-half, height-d_right),   # br
+        (x-quar, y-half, height-d_left),   # bl
+        (x-half, y, height-d_left),        # le
+        (x, y, -1),
+        (x-quar, y+half, -1),   # tl
+        (x+quar, y+half, -1),   # tr
+        (x+half, y, -1),        # re
+        (x+quar, y-half, -1),   # br
+        (x-quar, y-half, -1),   # bl
+        (x-half, y, -1),        # le
     ], dtype=np.float32)
     texcoords = np.array([
         (0.5, 0.5),   # 00 0
@@ -188,15 +194,15 @@ def gen(size, height):
         (0.75, 0.0),  # br 4
         (0.25, 0.0),  # bl 5
         (0.0, 0.5),   # le 6
-        (0.5, 0.5),   # 00 7
-        (0.25, 1.0),  # tl 8
-        (0.75, 1.0),  # tr 9
-        (1.0, 0.5),   # re 10
-        (0.75, 0.0),  # br 11
-        (0.25, 0.0),  # bl 12
-        (0.0, 0.5),   # le 13
+        (1.5, 1.5),   # 00 7
+        (1.25, 2.0),  # tl 8
+        (1.75, 2.0),  # tr 9
+        (2.0, 1.5),   # re 10
+        (1.75, 1.0),  # br 11
+        (1.25, 1.0),  # bl 12
+        (1.0, 1.5),   # le 13
     ], dtype=np.float32)
-    indices = np.array([
+    tops = np.array([
         0, 1, 2,
         0, 2, 3,
         0, 3, 4,
@@ -209,6 +215,8 @@ def gen(size, height):
         7, 11, 12,
         7, 12, 13,
         7, 13, 8,
+    ], dtype=np.uint8)
+    sides = np.array ([
         1, 8, 2,
         9, 8, 2,
         2, 9, 3,
@@ -222,7 +230,7 @@ def gen(size, height):
         6, 13, 1,
         8, 13, 1,
     ], dtype=np.uint8)
-    return vertices, texcoords, indices
+    return vertices, texcoords, tops, sides
 
 
 def gen_single(size):
@@ -277,6 +285,7 @@ attribute vec2 a_texcoord;
 uniform mat4 m_model;
 uniform mat4 m_view;
 uniform mat4 m_perspective;
+uniform float u_shade;
 
 void main(void) {
     gl_Position = m_perspective * m_view * m_model * vec4(a_position, 1.0);
@@ -287,9 +296,11 @@ FRAGMENT = r"""
 #version 120
 
 uniform sampler2D u_texture;
+uniform float u_shade;
 
 void main(void) {
     gl_FragColor = texture2D(u_texture, gl_TexCoord[0].st);
+    gl_FragColor.xyz -= vec3(u_shade);
 }
 """
 
