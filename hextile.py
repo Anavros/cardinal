@@ -7,12 +7,14 @@ import random
 
 from objects import AutoCanvas
 
-W, H, Z = 200, 200, 2
-COLS, ROWS = 4, 4
+W, H, Z = 200, 200, 4
+COLS, ROWS = 10, 10
 SIZE, FLAT = 0.2, 1
 
 def main():
     app.use_app('glfw')
+    gl.glEnable(gl.GL_BLEND)
+    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
     canvas = AutoCanvas(
         title="Hexes", size=(W, H), keys="interactive", px_scale=Z)
     program = gloo.Program(VERTEX, FRAGMENT)
@@ -30,8 +32,10 @@ def main():
     program['a_texcoord'] = hex_texcoords
     program['u_texture'] = dirt_texture
     program['u_offset'] = (0, 0)
+    program['u_overlay'] = 0.0
 
     cam = [0, 0, 1]  # mutable
+    hover = [0, 0]
     program['u_camera'] = cam
 
 
@@ -47,17 +51,26 @@ def main():
                     program['u_texture'] = grav_texture
                 x, y = (c*(3*SIZE/4), r*SIZE/FLAT + (SIZE/2/FLAT if (c%2==0) else 0))
                 program['u_offset'] = (x, y)
+                if [c, r] == hover:
+                    program['u_overlay'] = 0.1
+                else:
+                    program['u_overlay'] = 0.0
                 program.draw('triangles', hex_index)
 
     @canvas.connect
     def on_mouse_move(event):
-        if not event.buttons: return
-        (nx, ny) = event.pos
-        (ox, oy) = event.last_event.pos
-        (dx, dy) = (nx-ox, ny-oy)
-        cam[0] += dx/W/Z*2/cam[2]
-        cam[1] += -dy/H/Z*2/cam[2]
-        program['u_camera'] = cam
+        if not event.buttons:
+            x, y = event.pos
+            c, r = screen_to_index(x, y, cam)
+            hover[0] = c
+            hover[1] = r
+        else:
+            (nx, ny) = event.pos
+            (ox, oy) = event.last_event.pos
+            (dx, dy) = (nx-ox, ny-oy)
+            cam[0] += dx/W/Z*2/cam[2]
+            cam[1] += -dy/H/Z*2/cam[2]
+            program['u_camera'] = cam
 
     @canvas.connect
     def on_mouse_wheel(event):
@@ -72,13 +85,17 @@ def main():
             x, y = screen_to_world(x, y, cam)
             c, r = world_to_index(x, y)
             print("x:{:.2f} y:{:.2f}".format(x, y))
-            #touch(hexmap, c, r)
+            touch(hexmap, c, r)
 
     canvas.start()
     app.run()
 
 
-# TODO: integrate camera transformations
+def screen_to_index(x, y, camera):
+    x, y = screen_to_world(x, y, camera)
+    return world_to_index(x, y)
+
+
 def world_to_index(x, y):
     c = int(round(x/(0.75*SIZE)))
     r = int(round((y-SIZE/2)/SIZE if c%2==0 else y/SIZE))
@@ -148,6 +165,8 @@ attribute vec2 a_texcoord;
 uniform vec3 u_camera;
 uniform vec2 u_offset;
 
+uniform float u_overlay;
+
 void main(void) {
     gl_Position = vec4((a_position+u_camera.xy+u_offset.xy)*u_camera.z, 0.0, 1.0);
     gl_TexCoord[0] = vec4(a_texcoord, 0.0, 0.0);
@@ -157,9 +176,10 @@ FRAGMENT = r"""
 #version 120
 
 uniform sampler2D u_texture;
+uniform float u_overlay;
 
 void main(void) {
-    gl_FragColor = texture2D(u_texture, gl_TexCoord[0].st);
+    gl_FragColor = texture2D(u_texture, gl_TexCoord[0].st) + vec4(u_overlay);
 }
 """
 
