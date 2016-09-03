@@ -4,3 +4,22 @@ div menu        center      80
 
 ### name        col row wdt hgt pad
 ele menu        1   4   0   40   20
+
+#panel menu center 80x80
+#buttn menu 1x4 0x40
+#label menu 0x0 build_mode
+#label menu 0x1 bird_pen
+#label menu 0x2 hexmap_demo
+#label menu 0x3 quit
+
+# and then
+#if element.label == 'build_mode': pass
+
+# rather than
+#if element.row == 0 and element.col == 0: pass
+
+# compare
+#ui.get('pause', 'build_mode')
+
+# versus
+#ui['pause'][0, 0]

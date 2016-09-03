@@ -5,6 +5,7 @@ import numpy as np
 CONFIG_SYNTAX = [
     "div handle anchor[top|bottom|left|right|center] int(size)",
     "ele handle int(cols) int(rows) int(w) int(h) int(pad)",
+    #"ele handle #cols #rows #w #h #pad",  # better format? shorter
 ]
 
 
