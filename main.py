@@ -9,7 +9,8 @@ import os
 import image
 import spacing
 import internal
-from birdie import Birdie
+import effects
+import birdie
 
 # new libraries
 import rocket
@@ -49,8 +50,8 @@ game = Storage(
     needs_redraw = False,
     current_state = None,
     slate = None,
-    parts = bird_parts,
-    n_parts = part_counts,
+    #parts = bird_parts,
+    #n_parts = part_counts,
     selected_bird = (0, 0),
 )
 game.build = Storage(
@@ -63,8 +64,8 @@ game.pen = Storage(
     handle='pen',
     layout=spacing.create('pen.layout', W, H),
     birds=[
-        [Birdie(), Birdie()],
-        [Birdie(), Birdie()],
+        [Cycler(bird_parts), Cycler(bird_parts)],
+        [Cycler(bird_parts), Cycler(bird_parts)],
     ],
 )
 game.pause = Storage(
@@ -88,6 +89,61 @@ def main():
 
 @rocket.attach
 def draw():
+    state = game.state
+    slate = game.slate
+    if game.needs_redraw:
+        slate = image.render_as_colors(state.layout)
+        game.needs_redraw = False
+
+    # Bird Builder
+    if state.handle == 'build':
+        #print("rendering build state")
+        bird_image = birdie.build_a_bird(state.parts)
+        # backgrounds
+        slate = image.fill('images/button.png', state.layout['remainder'], slate, 2)
+        slate = image.fill('images/nine.png', state.layout['menu'][0,0], slate, 12)
+        slate = image.fill('images/nine.png', state.layout['cycle'], slate, 12)
+        # buttons
+        slate = image.fill_all('images/button.png', state.layout['cycle'], slate, 2)
+        # labels
+        slate = effects.label(state.layout['menu'], "Menu", slate)
+        # bird image
+        bird_image = np.repeat(np.repeat(bird_image, 2, axis=0), 2, axis=1)
+        slate = image.blit(bird_image, state.layout['remainder'][0,0], slate)
+
+    # Birdie Pen
+    elif state.handle == 'pen':
+        #print("rendering pen state")
+        slate = image.fill('images/nine.png', state.layout['menu'][0,0], slate, 12)
+        slate = image.fill_all('images/dirt.png', state.layout['selection'], slate, 2)
+        slate = effects.label(state.layout['menu'], "Menu", slate)
+
+        for r in range(2):
+            for c in range(2):
+                slate = image.blit(birdie.build_a_bird(state.birds[c][r]),
+                    state.layout['selection'][c,r], slate)
+
+    elif state.handle == 'demo':
+        #print("rendering map state")
+        slate = image.fill('images/nine.png', state.layout, slate, 12)
+        slate = image.fill('images/nine.png', state.layout['menu'][0,0], slate, 12)
+        slate = effects.label(state.layout, 'lol', slate)
+        slate = effects.label(state.layout['menu'], "Menu", slate)
+
+    # Pause Menu
+    elif state.handle == 'pause':
+        #print("rendering pause state")
+        slate = image.fill('images/button.png', state.layout, slate, 2)
+        slate = image.fill_all('images/nine.png', state.layout['menu'], slate, 12)
+        menu = state.layout['menu']
+        slate = effects.label(menu[0, 0], "Build Mode", slate)
+        slate = effects.label(menu[0, 1], "Birdie Pen", slate)
+        slate = effects.label(menu[0, 2], "Hxmap Demo", slate)
+        slate = effects.label(menu[0, 3], "Quit", slate)
+    else:
+        raise ValueError("Trying to render unknown state: {}".format(state.handle))
+
+    program['tex_color'] = gloo.Texture2D(slate)
     verts, coord, index = manipulate.coord_stub()
     program['a_position'] = gloo.VertexBuffer(verts)
     program['a_texcoord'] = gloo.VertexBuffer(coord)
@@ -97,7 +153,6 @@ def draw():
 @rocket.attach
 def left_click(point):
     (x, y) = int(point[0]/S), int(point[1]/S)
-    print(x, y)
     tup = game.state.layout.at(x, y)
     if tup is None:
         print("Nothing there!")

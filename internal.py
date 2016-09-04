@@ -18,16 +18,7 @@ def render(game, slate, program, texture_cache):
     # Bird Builder
     if state.handle == 'build':
         #print("rendering build state")
-        bird_image = image.composite([
-            state.parts.get('legs'),
-            state.parts.get('BODY'),
-            state.parts.get('beak'),
-            state.parts.get('tummy'),
-            state.parts.get('tail'),
-            state.parts.get('wing'),
-            state.parts.get('eye'),
-            state.parts.get('flower'),
-        ])
+        bird_image = birdie.build_a_bird(state.parts)
         # backgrounds
         slate = image.fill('images/button.png', state.layout['remainder'], slate, 2)
         slate = image.fill('images/nine.png', state.layout['menu'][0,0], slate, 12)
@@ -49,7 +40,7 @@ def render(game, slate, program, texture_cache):
 
         for r in range(2):
             for c in range(2):
-                slate = image.blit(birdie.build_a_bird(state.birds[c][r], game.parts),
+                slate = image.blit(birdie.build_a_bird(state.birds[c][r]),
                     state.layout['selection'][c,r], slate)
 
     elif state.handle == 'demo':
