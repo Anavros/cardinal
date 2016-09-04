@@ -23,3 +23,8 @@ ele menu        1   4   0   40   20
 
 # versus
 #ui['pause'][0, 0]
+
+#pause.layout = {
+#}
+#ui.get('menu.build_mode')
+#ui.menu.build_mode.x

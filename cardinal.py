@@ -147,8 +147,13 @@ class Element(object):
 
 
 class CardinalGUI:
-    pass
+    def __init__(self):
+        self.handle = None
+
+    def pssa():
+        pass
 
 
 class CardinalElement:
-    pass
+    def __init__(self):
+        pass

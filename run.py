@@ -38,30 +38,44 @@ def draw():
     gui_prog['t_gui'] = io.imread('images/nine.png')
     gui_prog.draw('triangle_strip', gloo.IndexBuffer(index))
 
-#@rocket.call
-#def left_click(point):
-#    panel, element = game.state.layout.at(point)
-#    if game.state_name == 'build':
-#        if panel.handle == 'cycle':
-#            if element.row == 0:
-#                pass
-#        elif panel.handle == 'menu':
-#            game.state = game.pause
-#            return
-#    elif game.state_name == 'pause':
-#        if panel.handle == 'menu':
-#            if row == 0:  # Build Mode
-#                game.state = game.build
-#            elif row == 1:  # Birdie Pen
-#                game.state = game.pen
-#            elif row == 2:  # Hexmap Demo
-#                game.state = game.demo
-#            elif row == 3:  # Quit
-#                raise SystemExit
-#    elif game.state_name == 'pen':
-#        pass
-#    elif game.state_name == 'demo':
-#        pass
+    for (verts, coord, index) in ui.coordinate():
+        gui_prog['a_ver'] = gloo.VertexBuffer(verts)
+        gui_prog['a_tex'] = gloo.VertexBuffer(coord)
+        gui_prog['t_gui'] = io.imread('images/nine.png')
+        gui_prog.draw('triangle_strip', gloo.IndexBuffer(index))
+
+    clicked = ui.at(x, y)
+    if clicked == 'enter_build_mode':
+        pass
+
+    if clicked.panel == 'menu':
+        if clicked.element == 'pause':
+            game.state = game.pause
+
+@rocket.call
+def left_click(point):
+    element = game.state.ui.at(point)
+    if game.state_name == 'build':
+        if panel.handle == 'cycle':
+            if element.row == 0:
+                pass
+        elif panel.handle == 'menu':
+            game.state = game.pause
+            return
+    elif game.state_name == 'pause':
+        if panel.handle == 'menu':
+            if row == 0:  # Build Mode
+                game.state = game.build
+            elif row == 1:  # Birdie Pen
+                game.state = game.pen
+            elif row == 2:  # Hexmap Demo
+                game.state = game.demo
+            elif row == 3:  # Quit
+                raise SystemExit
+    elif game.state_name == 'pen':
+        pass
+    elif game.state_name == 'demo':
+        pass
 
 
 if __name__ == '__main__':
