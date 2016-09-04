@@ -119,11 +119,11 @@ def launch(fps='auto'):
 
     def on_mouse_double_click(event):
         if event.last_event.button == 1:
-            call('left_click', event.pos)
+            call('left_click', event.last_event.pos)
         elif event.last_event.button == 2:
-            call('right_click', event.pos)
+            call('right_click', event.last_event.pos)
         elif event.last_event.button == 3:
-            call('middle_click', event.pos)
+            call('middle_click', event.last_event.pos)
     CANVAS.connect(on_mouse_double_click)
 
     def on_mouse_move(event):

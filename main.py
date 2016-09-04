@@ -13,7 +13,8 @@ from birdie import Birdie
 
 # new libraries
 import rocket
-from aux import load_shaders, Storage
+from aux import load_shaders, Storage, Cycler
+import manipulate
 
 W, H, S = 300, 200, 2
 TITLE = "Birdies"
@@ -39,14 +40,6 @@ def _cache_bird_parts():
 
 # Module-Level
 program = load_shaders('vertex.glsl', 'fragment.glsl')
-program['a_texcoord'] = np.array([
-    (0, 0), (0, 1),
-    (1, 0), (1, 1)
-]).astype(np.float32)
-program['a_position'] = np.array([
-    (-1.0, +1.0), (-1.0, -1.0),
-    (+1.0, +1.0), (+1.0, -1.0)
-]).astype(np.float32)
 
 blank_screen = np.zeros((W, H, 4), dtype=np.uint8)
 program['tex_color'] = gloo.Texture2D(blank_screen)
@@ -61,16 +54,9 @@ game = Storage(
     selected_bird = (0, 0),
 )
 game.build = Storage(
-    handle='build',
-    layout=spacing.create('build.layout', W, H),
-    n=part_counts,
-    legs=0,
-    beak=0,
-    tummy=0,
-    tail=0,
-    wing=0,
-    eye=0,
-    flower=0,
+    handle = 'build',
+    layout = spacing.create('build.layout', W, H),
+    parts = Cycler(bird_parts),
 )
 
 game.pen = Storage(
@@ -102,13 +88,16 @@ def main():
 
 @rocket.attach
 def draw():
-    program.draw('triangle_strip')
+    verts, coord, index = manipulate.coord_stub()
+    program['a_position'] = gloo.VertexBuffer(verts)
+    program['a_texcoord'] = gloo.VertexBuffer(coord)
+    program.draw('triangle_strip', gloo.IndexBuffer(index))
 
 
 @rocket.attach
 def left_click(point):
-    (x, y) = point
-    (x, y) = int(x/S), int(y/S)
+    (x, y) = int(point[0]/S), int(point[1]/S)
+    print(x, y)
     tup = game.state.layout.at(x, y)
     if tup is None:
         print("Nothing there!")
@@ -117,7 +106,59 @@ def left_click(point):
     if element is None:
         print("No element there.")
         return
-    internal.click(game, panel.handle, element.col, element.row)
+
+    state = game.state
+    col = element.col
+    row = element.row
+
+    # Bird Builder
+    if state.handle == 'build':
+        if panel.handle == 'cycle':
+            mappings = {
+                0: 'legs',
+                1: 'beak',
+                2: 'tummy',
+                3: 'tail',
+                4: 'wing',
+                5: 'eye',
+                6: 'flower',
+            }
+            state.parts.cycle(mappings[row])
+        elif panel.handle == 'menu':
+            game.state = game.pause
+
+    # Birdie Pen
+    elif state.handle == 'pen':
+        if panel.handle == 'menu':
+            game.state = game.pause
+            game.needs_redraw = True
+        elif panel.handle == 'selection':
+            bird = state.birds[col][row]
+            print("selecting bird", col, row)
+            game.selected_bird = (col, row)
+            game.state = game.build
+            game.needs_redraw = True
+
+    # Tile Rendering Demo
+    elif state.handle == 'demo':
+        if panel.handle == 'menu':
+            game.state = game.pause
+            game.needs_redraw = True
+
+    # Pause Menu
+    elif state.handle == 'pause':
+        if panel.handle == 'menu':
+            if row == 0:
+                game.state = game.build
+                game.needs_redraw = True
+            elif row == 1:
+                game.state = game.pen
+                game.needs_redraw = True
+            elif row == 2:
+                game.state = game.demo
+                game.needs_redraw = True
+            elif row == 3:
+                raise SystemExit
     game.slate = internal.render(game, game.slate, program, bird_parts)
 
 

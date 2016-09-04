@@ -7,16 +7,23 @@ def stretch(): pass
 def scale(): pass
 
 
-def coordinate(layout):
-    """
-    Calculate opengl vertices, texcoords, and indices for every element in a layout.
-
-    For each element in the layout, return a (verts, coord, index) triplet.
-    """
-    for panel in layout:
-        for element in panel:
-            pass
+def coord_stub():
+    verts = np.array([
+        (-1.0, +1.0), (+1.0, +1.0),
+        (-1.0, -1.0), (+1.0, -1.0),
+    ], dtype=np.float32)
+    # NOTE: these are upside-down, but if they are right-side up, the software render
+    # doesn't work and flips everything upside down again. So fix these when you
+    # switch to hardware rendering.
+    coord = np.array([
+        (0, 0), (1, 0),
+        (0, 1), (1, 1),
+    ], dtype=np.float32)
+    index = np.array([
+        0, 2, 1, 3
+    ], dtype=np.uint32)
     return verts, coord, index
+    
 
 
 def gui_nine_split(scr, tex, cut):

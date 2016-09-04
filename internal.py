@@ -9,63 +9,6 @@ import effects
 import birdie
 
 
-def click(game, panel_name, col, row):
-    state = game.state
-    
-    # Bird Builder
-    if state.handle == 'build':
-        if panel_name == 'cycle':
-            if row == 0:
-                state.legs = (state.legs+1) % state.n['legs']
-            elif row == 1:
-                state.beak = (state.beak+1) % state.n['beak']
-            elif row == 2:
-                state.tummy = (state.tummy+1) % state.n['tummy']
-            elif row == 3:
-                state.tail = (state.tail+1) % state.n['tail']
-            elif row == 4:
-                state.wing = (state.wing+1) % state.n['wing']
-            elif row == 5:
-                state.eye = (state.eye+1) % state.n['eye']
-            elif row == 6:
-                state.flower = (state.flower+1) % state.n['flower']
-        elif panel_name == 'menu':
-            game.state = game.pause
-
-    # Birdie Pen
-    elif state.handle == 'pen':
-        if panel_name == 'menu':
-            game.state = game.pause
-            game.needs_redraw = True
-        elif panel_name == 'selection':
-            bird = state.birds[col][row]
-            print("selecting bird", col, row)
-            game.selected_bird = (col, row)
-            game.state = game.build
-            game.needs_redraw = True
-    
-    # Tile Rendering Demo
-    elif state.handle == 'demo':
-        if panel_name == 'menu':
-            game.state = game.pause
-            game.needs_redraw = True
-
-    # Pause Menu
-    elif state.handle == 'pause':
-        if panel_name == 'menu':
-            if row == 0:
-                game.state = game.build
-                game.needs_redraw = True
-            elif row == 1:
-                game.state = game.pen
-                game.needs_redraw = True
-            elif row == 2:
-                game.state = game.demo
-                game.needs_redraw = True
-            elif row == 3:
-                raise SystemExit
-
-
 def render(game, slate, program, texture_cache):
     state = game.state
     if game.needs_redraw:
@@ -76,14 +19,14 @@ def render(game, slate, program, texture_cache):
     if state.handle == 'build':
         #print("rendering build state")
         bird_image = image.composite([
-            texture_cache['legs'][state.legs],
-            texture_cache['BODY'][0],
-            texture_cache['beak'][state.beak],
-            texture_cache['tummy'][state.tummy],
-            texture_cache['tail'][state.tail],
-            texture_cache['wing'][state.wing],
-            texture_cache['eye'][state.eye],
-            texture_cache['flower'][state.flower],
+            state.parts.get('legs'),
+            state.parts.get('BODY'),
+            state.parts.get('beak'),
+            state.parts.get('tummy'),
+            state.parts.get('tail'),
+            state.parts.get('wing'),
+            state.parts.get('eye'),
+            state.parts.get('flower'),
         ])
         # backgrounds
         slate = image.fill('images/button.png', state.layout['remainder'], slate, 2)

@@ -58,6 +58,29 @@ class Storage:
         for k, v in kwargs.items():
             self.__dict__[k] = v
 
+
+class Cycler:
+    def __init__(self, items=None):
+        self.items = {}
+        if items is not None:
+            for key, value_list in items.items():
+                self.add(key, value_list)
+
+    def add(self, key, items):
+        self.items[key] = {'n': 0, 'count': len(items), 'items': items}
+
+    def get(self, key):
+        n = self.items[key]['n']
+        return self.items[key]['items'][n]
+
+    def count(self, key):
+        return self.items[key]['count']
+
+    def cycle(self, key):
+        n = self.items[key]['n']
+        c = self.items[key]['count']
+        self.items[key]['n'] = (n+1) % c
+
 class Vector:
     pass
 
