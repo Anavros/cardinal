@@ -46,9 +46,12 @@ class Mover:
         self.transform = scale(self.transform, x, y, z)
 
 class View(Mover):
-    def __init__(self, fov=45.0, aspect_ratio=1.0, near=1.0, far=20.0):
+    def __init__(self, proj='perspective', fov=45.0, aspect=1.0, near=1.0, far=20.0):
         Mover.__init__(self)
-        self.proj = transforms.perspective(fov, aspect_ratio, near, far)
+        if proj == 'orthographic':
+            self.proj = transforms.ortho(0, 1, 0, 1, 0, 1)
+        elif proj == 'perspective':
+            self.proj = transforms.perspective(fov, aspect, near, far)
 
 class Storage:
     pass

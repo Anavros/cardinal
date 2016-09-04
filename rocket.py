@@ -32,7 +32,8 @@ def prep(size=(500, 500), title="Rocket Canvas", scale=1):
         size=size,
         title=title,
         keys='interactive',
-        resizable=False
+        resizable=False,
+        px_scale=scale,
     )
 
 # i.e. @rocket.attach
@@ -51,6 +52,7 @@ def attach(f):
 
 
 def call(event_name, *args, **kwargs):
+    #print(event_name)
     if CALLBACKS[event_name] is not None:
         CALLBACKS[event_name](*args, **kwargs)
 
