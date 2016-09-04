@@ -9,7 +9,6 @@ import os
 import image
 import spacing
 import internal
-from objects import Game
 from birdie import Birdie
 
 # new libraries
@@ -53,12 +52,15 @@ blank_screen = np.zeros((W, H, 4), dtype=np.uint8)
 program['tex_color'] = gloo.Texture2D(blank_screen)
 
 bird_parts, part_counts = _cache_bird_parts()
-game = Game(
+game = Storage(
+    needs_redraw = False,
+    current_state = None,
+    slate = None,
     parts = bird_parts,
     n_parts = part_counts,
     selected_bird = (0, 0),
 )
-game.add_state('build', Storage(
+game.build = Storage(
     handle='build',
     layout=spacing.create('build.layout', W, H),
     n=part_counts,
@@ -69,27 +71,28 @@ game.add_state('build', Storage(
     wing=0,
     eye=0,
     flower=0,
-))
+)
 
-game.add_state('pen', Storage(
+game.pen = Storage(
     handle='pen',
     layout=spacing.create('pen.layout', W, H),
     birds=[
         [Birdie(), Birdie()],
         [Birdie(), Birdie()],
     ],
-))
-game.add_state('pause', Storage(
+)
+game.pause = Storage(
     handle='pause',
     layout=spacing.create('pause.layout', W, H)
-))
-game.add_state('map', Storage(
-    handle='map',
+)
+game.demo = Storage(
+    handle='demo',
     layout=spacing.create('map.layout', W, H)
-))
-game.use('pause')
+)
+game.state = game.pause
+game.needs_redraw=True
 game.slate = internal.render(
-    game, image.render_as_colors(game.get_state().layout), program, bird_parts)
+    game, image.render_as_colors(game.state.layout), program, bird_parts)
 
 
 def main():
@@ -104,10 +107,9 @@ def draw():
 
 @rocket.attach
 def left_click(point):
-    state = game.get_state()
     (x, y) = point
     (x, y) = int(x/S), int(y/S)
-    tup = state.layout.at(x, y)
+    tup = game.state.layout.at(x, y)
     if tup is None:
         print("Nothing there!")
         return

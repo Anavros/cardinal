@@ -10,7 +10,7 @@ import birdie
 
 
 def click(game, panel_name, col, row):
-    state = game.get_state()
+    state = game.state
     
     # Bird Builder
     if state.handle == 'build':
@@ -30,38 +30,44 @@ def click(game, panel_name, col, row):
             elif row == 6:
                 state.flower = (state.flower+1) % state.n['flower']
         elif panel_name == 'menu':
-            game.use("pause")
+            game.state = game.pause
 
     # Birdie Pen
     elif state.handle == 'pen':
         if panel_name == 'menu':
-            game.use("pause")
+            game.state = game.pause
+            game.needs_redraw = True
         elif panel_name == 'selection':
             bird = state.birds[col][row]
             print("selecting bird", col, row)
             game.selected_bird = (col, row)
-            game.use("build")
+            game.state = game.build
+            game.needs_redraw = True
     
     # Tile Rendering Demo
-    elif state.handle == 'map':
+    elif state.handle == 'demo':
         if panel_name == 'menu':
-            game.use("pause")
+            game.state = game.pause
+            game.needs_redraw = True
 
     # Pause Menu
     elif state.handle == 'pause':
         if panel_name == 'menu':
             if row == 0:
-                game.use("build")
+                game.state = game.build
+                game.needs_redraw = True
             elif row == 1:
-                game.use("pen")
+                game.state = game.pen
+                game.needs_redraw = True
             elif row == 2:
-                game.use("map")
+                game.state = game.demo
+                game.needs_redraw = True
             elif row == 3:
                 raise SystemExit
 
 
 def render(game, slate, program, texture_cache):
-    state = game.get_state()
+    state = game.state
     if game.needs_redraw:
         slate = image.render_as_colors(state.layout)
         game.needs_redraw = False
@@ -103,7 +109,7 @@ def render(game, slate, program, texture_cache):
                 slate = image.blit(birdie.build_a_bird(state.birds[c][r], game.parts),
                     state.layout['selection'][c,r], slate)
 
-    elif state.handle == 'map':
+    elif state.handle == 'demo':
         #print("rendering map state")
         slate = image.fill('images/nine.png', state.layout, slate, 12)
         slate = image.fill('images/nine.png', state.layout['menu'][0,0], slate, 12)
