@@ -9,12 +9,12 @@ import os
 import image
 import spacing
 import internal
-from objects import AutoCanvas, Game, GameState
+from objects import Game
 from birdie import Birdie
 
 # new libraries
 import rocket
-from aux import load_shaders
+from aux import load_shaders, Storage
 
 W, H, S = 300, 200, 2
 TITLE = "Birdies"
@@ -58,9 +58,9 @@ game = Game(
     n_parts = part_counts,
     selected_bird = (0, 0),
 )
-game.add_state('build', GameState(
-    'build',
-    spacing.create('build.layout', W, H),
+game.add_state('build', Storage(
+    handle='build',
+    layout=spacing.create('build.layout', W, H),
     n=part_counts,
     legs=0,
     beak=0,
@@ -68,23 +68,24 @@ game.add_state('build', GameState(
     tail=0,
     wing=0,
     eye=0,
-    flower=0
+    flower=0,
 ))
-game.add_state('pen', GameState(
-    'pen',
-    spacing.create('pen.layout', W, H),
+
+game.add_state('pen', Storage(
+    handle='pen',
+    layout=spacing.create('pen.layout', W, H),
     birds=[
         [Birdie(), Birdie()],
         [Birdie(), Birdie()],
     ],
 ))
-game.add_state('pause', GameState(
-    'pause',
-    spacing.create('pause.layout', W, H)
+game.add_state('pause', Storage(
+    handle='pause',
+    layout=spacing.create('pause.layout', W, H)
 ))
-game.add_state('map', GameState(
-    'map',
-    spacing.create('map.layout', W, H)
+game.add_state('map', Storage(
+    handle='map',
+    layout=spacing.create('map.layout', W, H)
 ))
 game.use('pause')
 game.slate = internal.render(

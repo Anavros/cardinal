@@ -54,7 +54,9 @@ class View(Mover):
             self.proj = transforms.perspective(fov, aspect, near, far)
 
 class Storage:
-    pass
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            self.__dict__[k] = v
 
 class Vector:
     pass
