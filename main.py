@@ -8,17 +8,36 @@ import os
 
 import image
 import spacing
-import internal
+#import internal
 import effects
 import birdie
 
 # new libraries
 import rocket
-from aux import load_shaders, Storage, Cycler
+from aux import load_shaders, Storage, Cycler, LookupAtlas
 import manipulate
 
 W, H, S = 300, 200, 2
 TITLE = "Birdies"
+
+def _part_atlas():
+    # access by nickname or index
+    #atlas.get("legs", 0)
+    # keep a data structure for each quad and texcoord for gui panels
+
+    atlas = LookupAtlas(64, 8)
+    for path in os.listdir("assets/"):
+        part = path.split('_')[0]
+        if part not in ['legs','BODY','beak','tummy','tail','wing','eye','flower']:
+            print("Unknown part type:", part)
+        atlas.insert(io.imread("assets/"+path), part)
+    io.imsave("atlas.png", atlas.texture)
+    return atlas
+
+# how to render birds with compositing?
+# keep all pieces in texture atlas
+# and add them together directly in the fragment shader?
+# maybe we should work on something else first
 
 def _cache_bird_parts():
     cache = {
@@ -78,8 +97,9 @@ game.demo = Storage(
 )
 game.state = game.pause
 game.needs_redraw=True
-game.slate = internal.render(
-    game, image.render_as_colors(game.state.layout), program, bird_parts)
+#game.slate = internal.render(
+    #game, image.render_as_colors(game.state.layout), program, bird_parts)
+game.slate = image.render_as_colors(game.state.layout)
 
 
 def main():
@@ -87,8 +107,27 @@ def main():
     rocket.launch()
 
 
+def mock_draw():
+    ui = game.state.ui
+    for (verts, coord, index) in ui.renderables():
+        program['a_vert'] = verts
+        program['a_cord'] = coord
+        program.draw('triangle_strip', index)
+
+
+renderables = image.gpu_render_as_colors(game.state.layout)
 @rocket.attach
 def draw():
+    global renderables
+    verts, color, index = renderables[0]
+    #for verts, color, index in renderables:
+    program['a_position'] = gloo.VertexBuffer(verts)
+    #program['a_poscolor'] = gloo.VertexBuffer(color)
+    program['a_poscolor'] = [(0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)]
+    program.draw('triangle_strip', gloo.IndexBuffer(index))
+
+    return # XXX
+
     state = game.state
     slate = game.slate
     if game.needs_redraw:
@@ -214,7 +253,6 @@ def left_click(point):
                 game.needs_redraw = True
             elif row == 3:
                 raise SystemExit
-    game.slate = internal.render(game, game.slate, program, bird_parts)
 
 
 if __name__ == '__main__':

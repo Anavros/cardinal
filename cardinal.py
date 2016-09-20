@@ -9,49 +9,31 @@ CONFIG_SYNTAX = [
 ]
 
 
-def create(config_file, width, height):
-    gui = Layout(config_file.split('.')[0], width, height)
-    for args in malt.load(config_file, CONFIG_SYNTAX):
-        if args == 'div':
-            gui.insert(Panel(args.handle), args.anchor, args.size)
-        elif args == 'ele':
-            panel = gui.get(args.handle)
-            panel.make_grid(args.cols, args.rows, args.w, args.h, args.pad)
-    return gui
+#from cardinal import UI, Div
+#for (verts, coord, index) in ui.renderables():
+#label = ui.at(x, y)
+
+ui = cardinal.Interface(W, H)
+ui.insert('menu', 's', (1, 1))
 
 
-# TODO: come up with a better name
-class Layout(object):
-    def __init__(self, handle, w, h):
-        self.handle = handle
-        self.x = 0  # so you can target the whole screen for rendering
-        self.y = 0
-        self.w = w
-        self.h = h
-        self.required_w = 0
-        self.required_h = 0
-        self.panels = []
-        self.offset = {'top':0, 'bottom':0, 'left':0, 'right':0, 'center':0}
+class Interface:
+    def __init__(self, px_width, px_height):
+        self.w = px_width
+        self.h = px_height
 
-    def __getitem__(self, string):
-        """Find and return the panel whose handle matches the given string."""
-        for p in self.panels:
-            if p.handle == string:
-                return p
-        raise KeyError("Panel '{}' does not exist in this layout!".format(string))
+        self.panels = {}
+        self.offset = { 'n':0, 's':0, 'e':0, 'w':0 }
+        self.packed = False
 
     def get(self, handle):
-        """Returns the first panel found whose handle matches the given string.
+        return self.panels[handle]
 
-        Raises ValueError if the panel is not found."""
-        for p in self.panels:
-            if p.handle == handle:
-                return p
-        raise ValueError("Panel '{}' does not exist!".format(handle))
+    def insert(self, panel):
+        pass
 
-    def element_size(self, panel_name):
-        panel = self[panel_name]
-        return (panel.element_w, panel.element_h)
+    def renderables(self):
+        pass
 
     def insert(self, p, anchor, size):
         if self.offset['center']:
@@ -143,17 +125,4 @@ class Element(object):
         self.h = 0
 
     def coordinate(self):
-        pass
-
-
-class CardinalGUI:
-    def __init__(self):
-        self.handle = None
-
-    def pssa():
-        pass
-
-
-class CardinalElement:
-    def __init__(self):
         pass

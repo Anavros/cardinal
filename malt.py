@@ -3,6 +3,8 @@ import re
 import os
 import shlex
 
+import readline
+
 
 """Malt
 A tiny toolkit for structured input and output.
@@ -18,6 +20,22 @@ r_SYNTAX_FORM = r"""
 (?P<key>[a-z]+)             # Required keyword.
  (?(cast) \) )              # Closing paren for cast.
 (?P<allow>\[[\w\d_|]+\])?   # Optional list of allowed values.
+$
+"""
+
+r_NEW_SYNTAX_LINE = r"""
+^
+(?P<head>[\w]+)
+(?P<tail>\s+[\w\s|:,\[\]]+)*
+$
+"""
+
+r_NEW_SYNTAX_WORD = r"""
+^
+(?P<cast>[isf])?
+ (?(cast) (?P<limit> \[[\w|]+\]))?
+ (?(cast) : )
+(?P<key>[\w]+)
 $
 """
 
@@ -170,7 +188,7 @@ def _read_syntax_comments(filepath):
                 continue
             raw_lines.append(line.strip('?').strip())
     if not raw_lines:
-        raise ValueError()
+        raise ValueError("Malt syntax not provided nor found in file.")
     #serve(raw_lines)
     return _compile(raw_lines)
 
@@ -229,12 +247,13 @@ def _verify_arguments(given_args, expected_args):
         raise ValueError()
     for given, expected in zip(given_args, expected_args):
         # make sure right type and matches allowed
-        if expected.values and given not in expected.values:
-            raise ValueError()
+        if expected.values and (given not in expected.values):
+            raise ValueError("Unexpected value '{}' found in limited arg.".format(given))
         try:
             fresh_clean_and_beautiful = _cast(given, expected.cast)
         except TypeError:
-            raise ValueError()
+            raise ValueError("Failed to cast '{}' to type {}.".format(
+                given, expected.cast))
         else:
             final_args[expected.key] = fresh_clean_and_beautiful
     return final_args

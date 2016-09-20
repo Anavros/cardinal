@@ -1,29 +1,9 @@
 
-Spacing Toolkit:
--> Rename objects to make a little more sense.
-
-General Program:
--> Replace color rendering with actual textures.
-
 Demo:
--> Customize a birdie. *--
--> Display work-in-progress image in center of open space. *--
--> Use plus and minus buttons to scroll through attributes. *--
--> Keep a pen full of different birds.
-    -> Four persistent birdies.
-    -> Background image.
-    -> Moving animated sprites.
--> Select a bird to open it in the editor.
+-> Persistent birds.
+-> Put bird textures on an atlas.*--
+    -> Improve atlas packing.
+-> Implement hardware rendering.
 -> Transparent text rendering.
 -> Better text font.
--> Four-pane menu to select birds.
-
-Graphics:
--> Use texture atlases?
--> Render attributes on the GPU?
-
-Loop Design:
--> Get input.
--> Update objects.
--> Render.
--> Repeat.
+-> Four-pane menu to select birds.*--

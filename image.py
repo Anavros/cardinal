@@ -16,6 +16,28 @@ def render_as_colors(gui):
     return blank_tex
 
 
+def gpu_render_as_colors(gui):
+    renderables = []
+    for p in gui.panels:
+        rand_color = np.random.randint(255, size=(3), dtype=np.uint8)
+        p_verts = np.array([
+            #(p.x, p.y+p.h), (p.x+p.w, p.y+p.h),
+            #(p.x, p.y    ), (p.x+p.w, p.y    ),
+            (-1.0,  0.0), (+1.0,  0.0),
+            (-1.0, -1.0), (+1.0, -1.0),
+        ], dtype=np.float32)
+        p_color = np.array([
+            rand_color, rand_color,
+            rand_color, rand_color,
+        ], dtype=np.float32)
+        p_index = np.array([
+            0, 1, 2, 3
+        ], dtype=np.uint32)
+        renderables.append((p_verts, p_color, p_index))
+    return renderables
+        
+
+
 def imperfect_blit(image, s, anchor, slate):
     # assume anchor is center
     ih, iw, iz = image.shape

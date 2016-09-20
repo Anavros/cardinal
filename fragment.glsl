@@ -1,13 +1,16 @@
 #version 120
 
-uniform sampler2D tex_color;
+//uniform sampler2D tex_color;
+
+varying vec3 v_color;
 
 void main(void) {
     // gl_TexCoord[0].st is a vec2 with uv coords
     // we could probably manipulate those in the split function
     // it's actually directly set from a_texcoords
     // so 0, 0; 0, 1; etc
-    gl_FragColor = texture2D(tex_color, gl_TexCoord[0].st);
+    //gl_FragColor = texture2D(tex_color, gl_TexCoord[0].st);
+    gl_FragColor = vec4(v_color, 1);
 }
 
 void split_stretch(void) {

@@ -7,6 +7,10 @@ def stretch(): pass
 def scale(): pass
 
 
+def text(string):
+    pass
+
+
 def coord_stub():
     verts = np.array([
         (-1.0, +1.0), (+1.0, +1.0),
