@@ -7,7 +7,7 @@ import splitnine
 
 
 def render_as_colors(gui):
-    print("rendering colors")
+    #print("rendering colors")
     blank_tex = np.zeros((gui.h, gui.w, 4), dtype=np.uint8)
     for p in gui.panels:
         blank_tex[p.y:p.h+p.y, p.x:p.x+p.w, :] = color_block(p.h, p.w)

@@ -1,9 +1,9 @@
 
 ### name        anchor      px_size
-div menu        center      80
+div menu,       center,     80
 
 ### name        col row wdt hgt pad
-ele menu        1   4   0   40   20
+ele menu,       1,  4,  0,  40,  20
 
 #panel menu center 80x80
 #buttn menu 1x4 0x40

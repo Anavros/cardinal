@@ -3,9 +3,11 @@ import malt
 import numpy as np
 
 CONFIG_SYNTAX = [
-    "div handle anchor[top|bottom|left|right|center] int(size)",
-    "ele handle int(cols) int(rows) int(w) int(h) int(pad)",
+    #"div handle anchor[top|bottom|left|right|center] int(size)",
+    #"ele handle int(cols) int(rows) int(w) int(h) int(pad)",
     #"ele handle #cols #rows #w #h #pad",  # better format? shorter
+    "div handle, s(top|bottom|left|right|center):anchor, i:size",
+    "ele handle, i:cols, i:rows, i:w, i:h, i:pad",
 ]
 
 
