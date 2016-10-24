@@ -13,8 +13,8 @@ CONFIG_SYNTAX = [
 #for (verts, coord, index) in ui.renderables():
 #label = ui.at(x, y)
 
-ui = cardinal.Interface(W, H)
-ui.insert('menu', 's', (1, 1))
+#ui = cardinal.Interface(W, H)
+#ui.insert('menu', 's', (1, 1))
 
 
 class Interface:
