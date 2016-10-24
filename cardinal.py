@@ -2,14 +2,14 @@
 import malt
 import numpy as np
 
+# TODO: functions for text entry
+
 
 MALT_SYNTAX = [
     "split s:direction, f:size",
 ]
 
 
-# cardinal.Interface()
-# cardinal.Split()
 class Interface:
     def __init__(self, layout_file, size):
         # next goal: find 20% of screen size
@@ -62,17 +62,14 @@ class Interface:
             d in ['n', 's'] and size > available_h,
             d in ['w', 'e'] and size > available_w
         ]): raise ValueError("Split is too large!")
+
         w = size if d in ['w', 'e'] else available_w
         h = size if d in ['n', 's'] else available_h
         x = self.offsets['w'] if d != 'e' else available_w - size
-        y = self.offsets['n'] if d != 's' else available_h - size
+        #y = self.offsets['n'] if d != 's' else available_h - size
+        y = self.offsets['s'] if d != 'n' else self.h - self.offsets['n'] - size
         self.offsets[d] += size
-        # Second step: find absolute vertices.
-        v1 = (x, y)
-        v2 = (x + w, y)
-        v3 = (x, y + h)
-        v4 = (x + w, y + h)
-        self.splits.append((v1, v2, v3, v4))
+        self.splits.append(absolute_vertices(x, y, w, h))
 
     def dump_splits(self):
         for v1, v2, v3, v4 in self.splits:
@@ -80,45 +77,59 @@ class Interface:
 
     def render(self):
         n = len(self.splits)*4
-        vertices = np.zeros(shape=(n, 2), dtype=np.float32)
-        colors = np.zeros(shape=(n, 3), dtype=np.float32)
+        verts = np.zeros(shape=(n, 2), dtype=np.float32)
+        color = np.zeros(shape=(n, 3), dtype=np.float32)
         for i, split in enumerate(self.splits):
+            q = i*4  # step in fours
             # An array of three random floats in the range [0.0,1.0].
-            split_color = np.random.random(size=(3))
+            color[q:q+4] = np.random.random(size=(3))
             for j, vertex in enumerate(split):
-                vertices[i+j] = screen_space((self.w, self.h), vertex)
-                colors[i+j] = split_color
-        return vertices, colors
+                verts[q+j] = screen_space((self.w, self.h), vertex)
+        return verts, color
 
-#    def render_vertices(self):
-#        vertices = np.zeros(shape=(len(self.splits)*4, 2), dtype=np.float32)
-#        for i, split in enumerate(self.splits):
-#            for j, vertex in enumerate(split):
-#                vertices[i+j] = screen_space((self.w, self.h), vertex)
-#        return vertices
-#
-#    def render_colors(self):
-#        colors = np.zeros(shape=(n*4, 3), dtype=np.uint8)
-#        # There's probably a more idiomatic way of doing this.
-#        for i in range(n):
-#            colors[i] = np.random.randint(3)
-#        return colors
+    def indices(self):
+        # for every four vertices: 1, 2, 3, 4
+        # we need six indices: 1, 2, 3,  2, 3, 4
+        n = len(self.splits)
+        index = np.zeros((n, 6), dtype=np.uint8)
+        for i in range(n):
+            q = i*4
+            index[i] = [q, q+1, q+2, q+1, q+2, q+3]
+        return index
 
 
 class Split:
     pass
 
 
+def absolute_vertices(x, y, w, h):
+    """
+    Transform x,y position, width, and height into a quad.
+    Returns four x,y coordinate pairs.
+    >>> absolute_vertices(0, 0, 100, 100)
+    ((0, 0), (100, 0), (0, 100), (100, 100))
+    """
+    # REMEMBER: opengl origin point is BOTTOM LEFT, not top left.
+    # We might have to do a tricksy transformation in here.
+    # Although ultimately we should fix the wording to be consistent everywhere.
+    v1 = (x, y)
+    v2 = (x + w, y)
+    v3 = (x, y + h)
+    v4 = (x + w, y + h)
+    return (v1, v2, v3, v4)
+
+
 def screen_space(screen_size, vertex):
     """
     Normalize a pixel-wise split into [-1, +1] screen space.
-    >>> screen_space((100, 100), (50, 50))
+    >>> size = (100, 100)
+    >>> screen_space(size, (50, 50))
     (0.0, 0.0)
-    >>> screen_space((100, 100), (75, 25))
+    >>> screen_space(size, (75, 25))
     (0.5, -0.5)
-    >>> screen_space((100, 100), (0, 0))
+    >>> screen_space(size, (0, 0))
     (-1.0, -1.0)
-    >>> screen_space((100, 100), (100, 100))
+    >>> screen_space(size, (100, 100))
     (1.0, 1.0)
     """
     x, y = vertex

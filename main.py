@@ -17,6 +17,7 @@ def main():
     # Malt logging configuration.
     # TODO: Show new levels by default.
     malt.show("ERROR")
+    #malt.show("DEBUG")
 
     global program, interface
     # Must be placed in module scope, so it can be used inside the lower
@@ -41,7 +42,8 @@ def main():
 @rocket.attach
 def draw():
     global program, interface
-    program.draw('triangle_strip')
+    index = IndexBuffer(interface.indices())
+    program.draw('triangles', index)
 
 
 @rocket.attach
@@ -50,7 +52,7 @@ def key_press(key):
     if key == 'R':
         verts, color = interface.render()
         malt.log("Refreshing randomized split colors.")
-        malt.log(color)
+        malt.log(color, level='DEBUG')
         program['a_vertices'] = verts
         program['a_color'] = color
 
