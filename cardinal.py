@@ -1,18 +1,19 @@
 
 import malt
+log = malt.log
 import numpy as np
+import geometry
 
 # TODO: functions for text entry
 
 
 MALT_SYNTAX = [
-    "split s:direction, f:size",
+    "split s:name, s:direction, f:size",
 ]
 
 
 class Interface:
     def __init__(self, layout_file, size):
-        # next goal: find 20% of screen size
         self.w, self.h = size
         self.splits = []
         self.offsets = {
@@ -31,18 +32,19 @@ class Interface:
         for line in malt.load(layout_file, MALT_SYNTAX):
             if line.head == 'split':
                 if line.direction.lower() in "nsew":
-                    malt.log("Adding new split on {}.".format(line.direction))
-                    malt.log("Taking {}% of screen size.".format(
-                        round(line.size*100)))
-                    self.add_split(line.direction.lower(), line.size)
+                    log("Adding new split on {}.".format(line.direction),
+                        level='LAYOUT')
+                    log("Taking {}% of screen size.".format(
+                        round(line.size*100)), level='LAYOUT')
+                    self.add_split(line.name, line.direction.lower(), line.size)
                 else:
-                    malt.log("Unknown split direction: {}.".format(line.direction),
+                    log("Unknown direction: {}.".format(line.direction),
                         level="ERROR")
             else:
-                malt.log("Unknown command in layout file: {}.".format(
+                log("Unknown command in layout file: {}.".format(
                     line.head), level="ERROR")
 
-    def add_split(self, d, percent_size):
+    def add_split(self, name, d, percent_size):
         """
         Adds a split to the interface. Used internally. TODO: doctests?
         Should probably be split up into several smaller functions.
@@ -62,18 +64,18 @@ class Interface:
             d in ['n', 's'] and size > available_h,
             d in ['w', 'e'] and size > available_w
         ]): raise ValueError("Split is too large!")
-
         w = size if d in ['w', 'e'] else available_w
         h = size if d in ['n', 's'] else available_h
         x = self.offsets['w'] if d != 'e' else available_w - size
         #y = self.offsets['n'] if d != 's' else available_h - size
         y = self.offsets['s'] if d != 'n' else self.h - self.offsets['n'] - size
         self.offsets[d] += size
-        self.splits.append(absolute_vertices(x, y, w, h))
+        split = Split(name, d, percent_size, absolute_vertices(x, y, w, h))
+        self.splits.append(split)
 
     def dump_splits(self):
         for v1, v2, v3, v4 in self.splits:
-            malt.log("{}, {}, {}, {}".format(v1, v2, v3, v4))
+            log("{}, {}, {}, {}".format(v1, v2, v3, v4))
 
     def render(self):
         n = len(self.splits)*4
@@ -97,9 +99,28 @@ class Interface:
             index[i] = [q, q+1, q+2, q+1, q+2, q+3]
         return index
 
+    def at(self, pos):
+        for split in self.splits:
+            if geometry.inside(pos, split.vertices):
+                return split
+        # If not found.
+        return None
+
+
 
 class Split:
-    pass
+    def __init__(self, name, d, per, verts):
+        self.name = name
+        self.direction = d
+        self.percent = per
+        self.vertices = verts
+
+    def __iter__(self):
+        for v in self.vertices:
+            yield v
+
+    def __repr__(self):
+        return "Split(name={}, verts={})".format(self.name, self.vertices)
 
 
 def absolute_vertices(x, y, w, h):
@@ -107,15 +128,17 @@ def absolute_vertices(x, y, w, h):
     Transform x,y position, width, and height into a quad.
     Returns four x,y coordinate pairs.
     >>> absolute_vertices(0, 0, 100, 100)
-    ((0, 0), (100, 0), (0, 100), (100, 100))
+    ((0, 100), (100, 100), (0, 0), (100, 0))
+
+    The order goes: top left, top right, bottom left, bottom right.
     """
     # REMEMBER: opengl origin point is BOTTOM LEFT, not top left.
     # We might have to do a tricksy transformation in here.
     # Although ultimately we should fix the wording to be consistent everywhere.
-    v1 = (x, y)
-    v2 = (x + w, y)
-    v3 = (x, y + h)
-    v4 = (x + w, y + h)
+    v1 = (x, y + h)
+    v2 = (x + w, y + h)
+    v3 = (x, y)
+    v4 = (x + w, y)
     return (v1, v2, v3, v4)
 
 

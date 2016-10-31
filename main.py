@@ -2,6 +2,7 @@
 from vispy.gloo import IndexBuffer
 
 import malt
+from malt import log
 import rocket
 
 import cardinal
@@ -47,11 +48,26 @@ def key_press(key):
     global program, interface
     if key == 'R':
         verts, color = interface.render()
-        malt.log("Refreshing randomized split colors.")
-        malt.log(color, level='DEBUG')
+        log("Refreshing randomized split colors.")
+        log(color, level='DEBUG')
         program['a_vertices'] = verts
         program['a_color'] = color
 
 
+# BUG: The y coordinate is inverted!
+@rocket.attach
+def left_click(screen):
+    global program, interface
+    #world = rocket.screen_to_world(screen)
+    x, y = screen
+    #log(y)
+    y = H-y
+    #log(y)
+    # (malt) BUG: multiple pos args are printed on multiple lines
+    #log((x, y), level='INPUT')
+    log(repr(interface.at((x, y))), level='INPUT')
+
+
 if __name__ == '__main__':
+    malt.hide('LAYOUT')
     main()
