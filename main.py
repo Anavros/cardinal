@@ -14,11 +14,6 @@ F_PATH = 'shaders/f.glsl'
 W, H = 500, 500
 
 def main():
-    # Malt logging configuration.
-    # TODO: Show new levels by default.
-    malt.show("ERROR")
-    #malt.show("DEBUG")
-
     global program, interface
     # Must be placed in module scope, so it can be used inside the lower
     # functions.
@@ -35,7 +30,8 @@ def main():
 
     # Rocket functions can be called in any order, as long as prep is done
     # before launch.
-    rocket.prep(size=(W, H), clear_color=(0.5, 0.5, 0.5, 0.5))
+    rocket.prep(size=(W, H), clear_color=(0.5, 0.5, 0.5, 0.5),
+        title="Cardinal")
     rocket.launch()
 
 

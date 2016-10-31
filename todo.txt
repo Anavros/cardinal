@@ -1,12 +1,11 @@
 
-GUI Toolkit:
-- Custom, non-os-consistent GUI.
-- Dead simple, quick to develop, and as few requirements as possible.
-- No fancy shit.
-- New markup language to lay out.
-- No floating elements, focused around anchors.
-- Ability to stretch nine-split textures.
-- Pixel perfect rendering for other textures.
-- Event-driven responses.
-- Dedicated to game/custom graphic designs.
-- Fully based in python.
+Features:
+- Anchor-based layout generation.
+- Translation from screen coordinates to split name.
+- Integration of textures somehow?
+- Smart stretching for anchored textures and pixel-perfect for others.
+
+TODO:
+- Map screen space event to layout element.
+- Named layout elements.
+- Pixel-perfect subelements for buttons and widgets.
