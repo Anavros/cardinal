@@ -1,6 +1,0 @@
-
-### name        anchor      px_size
-div menu,       top,        20
-
-### name        col row wdt hgt pad
-ele menu,       1,  1,  0,  0,  0
